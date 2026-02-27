@@ -1,0 +1,31 @@
+{
+    "settings": {
+        "service": "rtmp_custom",
+        "server": "rtmp://localhost:1935/stream",
+        "key": "test"
+    },
+    "obs_output_settings": {
+        "video_encoder": "x264 (Software)",
+        "rate_control": "CBR",
+        "bitrate": "2500 Kbps",
+        "keyframe_interval": "2 seconds",
+        "profile": "baseline",
+        "tune": "zerolatency",
+        "audio_encoder": "AAC",
+        "audio_bitrate": "128 Kbps",
+        "audio_sample_rate": "44100"
+    },
+    "obs_video_settings": {
+        "base_resolution": "1280x720",
+        "output_resolution": "1280x720",
+        "fps": "30"
+    },
+    "IMPORTANT_NOTES": [
+        "In OBS: Settings > Output > Streaming",
+        "Encoder MUST be 'x264' (Software, NOT NVENC or hardware)",
+        "Profile MUST be 'baseline' (not main or high)",
+        "Keyframe Interval: 2 seconds",
+        "Tune: zerolatency (for low latency streaming)",
+        "If you still get black video: try lowering resolution to 854x480"
+    ]
+}

@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bornebit-bg text-bornebit-text font-sans antialiased overflow-x-hidden;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-bornebit-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-bornebit-primary/50 rounded-full hover:bg-bornebit-primary;
+}

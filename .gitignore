@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+wormhole-front/dist/
+wormhole-front/dist-electron/
+www/app/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Capacitor
+wormhole-front/android/
+wormhole-front/ios/
