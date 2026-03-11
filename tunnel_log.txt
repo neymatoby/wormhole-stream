@@ -1,28 +1,98 @@
-2026-03-01T16:02:45Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
-2026-03-01T16:02:45Z INF Requesting new quick Tunnel on trycloudflare.com...
-2026-03-01T16:02:50Z INF +--------------------------------------------------------------------------------------------+
-2026-03-01T16:02:50Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
-2026-03-01T16:02:50Z INF |  https://inspection-muscle-ribbon-necessity.trycloudflare.com                              |
-2026-03-01T16:02:50Z INF +--------------------------------------------------------------------------------------------+
-2026-03-01T16:02:50Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]
-2026-03-01T16:02:50Z INF Version 2026.2.0 (Checksum c420e54618f6ab69426677285738b0f03fba7ad4980409ace399f5284994fb4a)
-2026-03-01T16:02:50Z INF GOOS: linux, GOVersion: go1.24.13, GoArch: amd64
-2026-03-01T16:02:50Z INF Settings: map[ha-connections:1 no-autoupdate:true protocol:quic url:http://host.docker.internal:8080]
-2026-03-01T16:02:50Z INF Generated Connector ID: b4f5f7f4-b653-48da-8592-bdcf29c9fd0d
-2026-03-01T16:02:50Z INF Initial protocol quic
-2026-03-01T16:02:50Z INF ICMP proxy will use 172.17.0.2 as source for IPv4
-2026-03-01T16:02:50Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
-2026-03-01T16:02:50Z INF ICMP proxy will use 172.17.0.2 as source for IPv4
-2026-03-01T16:02:50Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
-2026-03-01T16:02:50Z INF Starting metrics server on [::]:20241/metrics
-2026-03-01T16:02:50Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.77
-2026/03/01 16:02:50 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
-2026-03-01T16:02:51Z INF Registered tunnel connection connIndex=0 connection=17b15f38-9001-4c2c-a3c0-96caa0765925 event=0 ip=198.41.192.77 location=los01 protocol=quic
-2026-03-01T16:44:09Z ERR failed to run the datagram handler error="timeout: no recent network activity" connIndex=0 event=0 ip=198.41.192.77
-2026-03-01T16:44:09Z ERR failed to accept incoming stream requests error="failed to accept QUIC stream: timeout: no recent network activity" connIndex=0 event=0 ip=198.41.192.77
-2026-03-01T16:44:09Z ERR failed to serve tunnel connection error="datagram manager encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.77
-2026-03-01T16:44:09Z ERR Serve tunnel error error="datagram manager encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.77
-2026-03-01T16:44:09Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.77
-2026-03-01T16:44:11Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.77
-2026-03-01T16:44:11Z INF Registered tunnel connection connIndex=0 connection=1ed1cd44-eca1-44ee-8510-b2b03183c52b event=0 ip=198.41.192.77 location=lhr09 protocol=quic
-time="2026-03-01T18:23:26+01:00" level=error msg="error waiting for container: unexpected EOF"
+2026-03-11T22:19:31Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2026-03-11T22:19:31Z INF Requesting new quick Tunnel on trycloudflare.com...
+2026-03-11T22:19:44Z INF +--------------------------------------------------------------------------------------------+
+2026-03-11T22:19:44Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2026-03-11T22:19:44Z INF |  https://walked-marvel-recipe-tba.trycloudflare.com                                        |
+2026-03-11T22:19:44Z INF +--------------------------------------------------------------------------------------------+
+2026-03-11T22:19:44Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]
+2026-03-11T22:19:44Z INF Version 2026.2.0 (Checksum c420e54618f6ab69426677285738b0f03fba7ad4980409ace399f5284994fb4a)
+2026-03-11T22:19:44Z INF GOOS: linux, GOVersion: go1.24.13, GoArch: amd64
+2026-03-11T22:19:44Z INF Settings: map[ha-connections:1 no-autoupdate:true protocol:quic url:http://host.docker.internal:8080]
+2026-03-11T22:19:44Z INF Generated Connector ID: 3ce9c06e-5db0-435f-8fa8-ca97fd5be57c
+2026-03-11T22:19:44Z INF Initial protocol quic
+2026-03-11T22:19:44Z INF ICMP proxy will use 172.17.0.2 as source for IPv4
+2026-03-11T22:19:44Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
+2026-03-11T22:19:45Z INF ICMP proxy will use 172.17.0.2 as source for IPv4
+2026-03-11T22:19:45Z INF ICMP proxy will use ::1 in zone lo as source for IPv6
+2026-03-11T22:19:45Z INF Starting metrics server on [::]:20241/metrics
+2026-03-11T22:19:45Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.37
+2026/03/11 22:19:45 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 7168 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes for details.
+2026-03-11T22:19:50Z ERR Failed to dial a quic connection error="failed to dial to edge with quic: timeout: no recent network activity" connIndex=0 event=0 ip=198.41.192.37
+2026-03-11T22:19:50Z INF Retrying connection in up to 2s connIndex=0 event=0 ip=198.41.192.37
+2026-03-11T22:19:50Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.27
+2026-03-11T22:19:58Z ERR Failed to dial a quic connection error="failed to dial to edge with quic: timeout: no recent network activity" connIndex=0 event=0 ip=198.41.192.27
+2026-03-11T22:19:58Z INF Retrying connection in up to 4s connIndex=0 event=0 ip=198.41.192.27
+2026-03-11T22:19:59Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.200.73
+2026-03-11T22:20:00Z INF Registered tunnel connection connIndex=0 connection=d2910947-4b9f-4a9c-8f04-3adbbfe7e169 event=0 ip=198.41.200.73 location=jnb04 protocol=quic
+2026-03-11T22:22:16Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:16Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:22:20Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:20Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:22:26Z ERR  error="stream 77 canceled by remote with error code 0" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:26Z ERR Request failed error="stream 77 canceled by remote with error code 0" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/1773267738867.ts event=0 ip=198.41.200.73 type=http
+2026-03-11T22:22:27Z ERR  error="stream 89 canceled by remote with error code 0" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:27Z ERR Request failed error="stream 89 canceled by remote with error code 0" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/1773267740866.ts event=0 ip=198.41.200.73 type=http
+2026-03-11T22:22:35Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:35Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:22:39Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:39Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:22:46Z ERR  error="stream 237 canceled by remote with error code 0" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:46Z ERR Request failed error="stream 237 canceled by remote with error code 0" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/1773267758863.ts event=0 ip=198.41.200.73 type=http
+2026-03-11T22:22:58Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:22:58Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/1773267770865.ts event=0 ip=198.41.200.73 type=http
+2026-03-11T22:23:05Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:23:05Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:23:13Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:23:13Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:23:31Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:23:31Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:24:01Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:24:01Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:24:25Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:24:25Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:24:32Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:24:32Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:24:45Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:24:45Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:24:49Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:24:49Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:25:28Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:25:28Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:26:35Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:26:35Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:27:03Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:27:03Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:27:04Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:27:04Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:27:26Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:27:26Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:27:27Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:27:27Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:27:29Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:27:29Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:27:51Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:27:51Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:27:57Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:27:57Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:28:12Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:28:12Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:28:26Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:28:26Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:28:30Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:28:30Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:28:34Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:28:34Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:28:35Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:28:35Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:28:42Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:28:42Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:28:43Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:28:43Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:29:21Z ERR  error="Incoming request ended abruptly: context canceled" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:29:21Z ERR Request failed error="Incoming request ended abruptly: context canceled" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_480p1128kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:29:34Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: EOF" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:29:34Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: EOF" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:29:35Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp 192.168.65.254:8080: connect: connection refused" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:29:35Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp 192.168.65.254:8080: connect: connection refused" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test_720p2628kbs/index.m3u8 event=0 ip=198.41.200.73 type=http
+2026-03-11T22:29:35Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp 192.168.65.254:8080: connect: connection refused" connIndex=0 event=1 ingressRule=0 originService=http://host.docker.internal:8080
+2026-03-11T22:29:35Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp 192.168.65.254:8080: connect: connection refused" connIndex=0 dest=https://walked-marvel-recipe-tba.trycloudflare.com/hls/test.m3u8 event=0 ip=198.41.200.73 type=http

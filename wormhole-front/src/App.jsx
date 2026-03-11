@@ -30,7 +30,28 @@ function App() {
   const [subLoading, setSubLoading] = useState(true);
   const [liveTelemetry, setLiveTelemetry] = useState(null);
   const [flightLog, setFlightLog] = useState([]);
-  const { user, loading, signOut, isAuthenticated } = useAuth();
+  const { user, loading, signOut, isAuthenticated, isDemo, demoStartTime } = useAuth();
+
+  // ── Demo timer (10 min = 600 s) ───────────────────────────────────────────
+  const DEMO_DURATION = 10 * 60; // seconds
+  const [demoSecondsLeft, setDemoSecondsLeft] = useState(DEMO_DURATION);
+  const [demoExpired, setDemoExpired] = useState(false);
+
+  useEffect(() => {
+    if (!isDemo || !demoStartTime) return;
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - demoStartTime) / 1000);
+      const remaining = Math.max(0, DEMO_DURATION - elapsed);
+      setDemoSecondsLeft(remaining);
+      if (remaining === 0) setDemoExpired(true);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [isDemo, demoStartTime]);
+
+  const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Handle telemetry updates from OSD parser
   const handleTelemetryUpdate = (tel) => {
@@ -87,7 +108,7 @@ function App() {
   const [streamKey, setStreamKey] = useState(() => localStorage.getItem('borbnebit_stream_key') || 'test');
   // Media server URL — Cloudflare Tunnel to your local NGINX-RTMP Docker container
   // No bandwidth limits, no session timeouts (unlike ngrok free tier)
-  const MEDIA_SERVER = 'https://inspection-muscle-ribbon-necessity.trycloudflare.com';
+  const MEDIA_SERVER = 'https://walked-marvel-recipe-tba.trycloudflare.com';
   const defaultServer = MEDIA_SERVER;
   const [hlsServer, setHlsServer] = useState(() => localStorage.getItem('borbnebit_hls_server') || defaultServer);
 
@@ -152,13 +173,47 @@ function App() {
     );
   }
 
-  // No active subscription → Pricing page
-  if (!isSubscriptionActive(subscription)) {
+  // Demo expired → show full subscription paywall
+  if (demoExpired) {
+    return (
+      <div className="relative">
+        {/* Blurred app behind the paywall */}
+        <div className="pointer-events-none select-none filter blur-sm opacity-30 fixed inset-0 overflow-hidden">
+          <div className="w-full h-full bg-bornebit-gradient" />
+        </div>
+        {/* Paywall overlay */}
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-bornebit-primary to-bornebit-accent rounded-2xl flex items-center justify-center shadow-2xl shadow-bornebit-primary/40">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-white">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-extrabold text-white mb-2">Your Demo Has Ended</h2>
+            <p className="text-gray-400 text-sm max-w-sm mx-auto">You've experienced 10 minutes of Wormhole's live drone streaming platform. Subscribe to keep your access and unlock the full power of the system.</p>
+          </div>
+          <PricingPlans onPlanSelected={(plan) => {
+            setDemoExpired(false);
+            setSubscription({ plan_id: plan.id, status: 'active', expires_at: '2099-12-31' });
+          }} />
+        </div>
+      </div>
+    );
+  }
+
+  // No active subscription → Pricing page (but demo users get free starter access)
+  if (!isSubscriptionActive(subscription) && !isDemo) {
     return <PricingPlans onPlanSelected={handlePlanSelected} />;
   }
 
+  // Inject a demo subscription so plan-gating works correctly in demo mode
+  const effectiveSubscription = isDemo && !subscription
+    ? { plan_id: 'starter', status: 'active', expires_at: '2099-12-31' }
+    : subscription;
+
+
   // Determine plan tier for feature gating
-  const planId = subscription?.plan_id || 'starter';
+  const planId = effectiveSubscription?.plan_id || 'starter';
   const hasRadar = planId === 'professional' || planId === 'enterprise' || planId === 'monthly' || planId === 'annual';
   const hasHD = planId === 'professional' || planId === 'enterprise' || planId === 'monthly' || planId === 'annual';
 
@@ -536,6 +591,29 @@ function App() {
         <div className="fixed inset-0 bg-black/70 z-40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
       )}
 
+      {/* Demo Countdown HUD */}
+      {isDemo && !demoExpired && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-sm shadow-lg transition-all ${
+          demoSecondsLeft < 120
+            ? 'bg-red-500/20 border-red-500/50 text-red-300 animate-pulse'
+            : 'bg-black/60 border-amber-500/40 text-amber-400'
+        }`}>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider font-mono opacity-70">Demo</div>
+            <div className="text-sm font-bold font-mono leading-none">{fmtTime(demoSecondsLeft)}</div>
+          </div>
+          <button
+            onClick={() => setSubscription(null)}
+            className="ml-1 text-[10px] bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 px-2 py-1 rounded-lg font-semibold text-amber-300 transition-all"
+          >
+            Upgrade
+          </button>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className={`
         ${isMobile
@@ -682,4 +760,5 @@ function App() {
 }
 
 export default App
+
 

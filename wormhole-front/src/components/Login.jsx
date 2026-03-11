@@ -361,6 +361,48 @@ const Login = () => {
                         </>
                     )}
 
+                    {/* Demo Access */}
+                    {isLogin && (
+                        <div className="mt-4">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="flex-1 h-px bg-white/10"></div>
+                                <span className="text-xs text-bornebit-muted uppercase">or</span>
+                                <div className="flex-1 h-px bg-white/10"></div>
+                            </div>
+                            <button
+                                id="demo-access-btn"
+                                type="button"
+                                onClick={async () => {
+                                    setLocalError('');
+                                    setIsSubmitting(true);
+                                    try {
+                                        // Store a demo org so the app has industry context
+                                        localStorage.setItem('wormhole_org', JSON.stringify({
+                                            name: 'Demo Organization',
+                                            industry: 'security',
+                                            created: new Date().toISOString()
+                                        }));
+                                        await signIn('demo@bornebit.com', 'demo123');
+                                    } catch (err) {
+                                        setLocalError(err.message);
+                                    } finally {
+                                        setIsSubmitting(false);
+                                    }
+                                }}
+                                disabled={isSubmitting}
+                                className="w-full relative overflow-hidden group bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 hover:border-amber-400/60 rounded-xl py-3 text-amber-400 hover:text-amber-300 transition-all font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-400/10 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                                </svg>
+                                Try Demo — 10 min free
+                                <span className="ml-1 text-[10px] bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 rounded-full font-mono">NO SIGNUP</span>
+                            </button>
+                            <p className="text-center text-[10px] text-gray-600 mt-2">Demo resets after 10 minutes. No credit card required.</p>
+                        </div>
+                    )}
+
                     {/* Powered by */}
                     <div className="mt-6 text-center">
                         <p className="text-[10px] md:text-xs text-gray-600">

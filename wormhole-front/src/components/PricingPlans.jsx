@@ -32,19 +32,19 @@ const INDUSTRY_FEATURES = {
 
 const PLANS = [
     {
-        id: 'short_stream',
-        name: 'Short Stream',
-        price: 30,
-        priceUnit: 3000,
-        display: '$30',
-        period: 'up to 2 hours',
+        id: 'free_trial',
+        name: 'Free Trial',
+        price: 0,
+        priceUnit: 0,
+        display: '$0',
+        period: 'forever',
         features: [
-            '30 mins to 2 hours stream',
-            '1080p HD quality',
+            '1080p HD stream quality',
+            'Full dashboard testing',
             'Basic telemetry dashboard',
-            '7-day recording history',
+            'No credit card required',
         ],
-        badge: 'QUICK MISSION',
+        badge: 'START HERE',
         tier: 'basic',
     },
     {
@@ -200,6 +200,10 @@ const PricingPlans = ({ onPlanSelected }) => {
         setIsProcessing(true);
 
         try {
+            if (plan.price === 0) {
+                await handleDemoPayment(plan);
+                return;
+            }
             payWithPaystack(plan);
         } catch (err) {
             console.error('Plan selection error:', err);

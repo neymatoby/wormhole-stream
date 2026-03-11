@@ -15,6 +15,8 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isDemo, setIsDemo] = useState(false);
+    const [demoStartTime, setDemoStartTime] = useState(null);
 
     useEffect(() => {
         // Check active session on mount
@@ -54,6 +56,8 @@ export const AuthProvider = ({ children }) => {
                     email: 'demo@bornebit.com',
                     user_metadata: { username: 'Demo User' }
                 });
+                setIsDemo(true);
+                setDemoStartTime(Date.now());
                 return;
             }
 
@@ -93,6 +97,8 @@ export const AuthProvider = ({ children }) => {
     const handleSignOut = async () => {
         try {
             setError(null);
+            setIsDemo(false);
+            setDemoStartTime(null);
             await signOut();
         } catch (err) {
             setError(err.message);
@@ -129,7 +135,9 @@ export const AuthProvider = ({ children }) => {
         signOut: handleSignOut,
         signInWithGoogle: handleGoogleSignIn,
         signInWithGitHub: handleGitHubSignIn,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
+        isDemo,
+        demoStartTime,
     };
 
     return (
