@@ -46,6 +46,17 @@ export const AuthProvider = ({ children }) => {
         try {
             setError(null);
             setLoading(true);
+
+            // DEMO BYPASS for client presentation
+            if (email === 'demo@bornebit.com' && password === 'demo123') {
+                setUser({
+                    id: 'demo-user-123',
+                    email: 'demo@bornebit.com',
+                    user_metadata: { username: 'Demo User' }
+                });
+                return;
+            }
+
             await signIn(email, password);
         } catch (err) {
             setError(err.message);
@@ -59,6 +70,17 @@ export const AuthProvider = ({ children }) => {
         try {
             setError(null);
             setLoading(true);
+
+            // DEMO BYPASS for client presentation
+            if (email === 'demo@bornebit.com' && password === 'demo123') {
+                setUser({
+                    id: 'demo-user-123',
+                    email: 'demo@bornebit.com',
+                    user_metadata: { username: username || 'Demo User' }
+                });
+                return;
+            }
+
             await signUp(email, password, username);
         } catch (err) {
             setError(err.message);

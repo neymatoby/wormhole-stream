@@ -32,64 +32,86 @@ const INDUSTRY_FEATURES = {
 
 const PLANS = [
     {
-        id: 'starter',
-        name: 'Starter',
-        price: 0,
-        priceKobo: 0,
-        display: 'Free',
-        period: 'forever',
+        id: 'short_stream',
+        name: 'Short Stream',
+        price: 30,
+        priceUnit: 3000,
+        display: '$30',
+        period: 'up to 2 hours',
         features: [
-            '1 live drone stream',
-            '480p streaming quality',
+            '30 mins to 2 hours stream',
+            '1080p HD quality',
             'Basic telemetry dashboard',
             '7-day recording history',
-            'Up to 3 team members',
-            'Community support',
         ],
-        badge: 'FREE FOREVER',
-        tier: 'free',
+        badge: 'QUICK MISSION',
+        tier: 'basic',
     },
     {
-        id: 'professional',
-        name: 'Professional',
-        price: 25000, // ₦25,000/month
-        priceKobo: 2500000,
-        display: '₦25,000',
-        period: '/month per seat',
+        id: 'extended_stream',
+        name: 'Extended',
+        price: 50,
+        priceUnit: 5000,
+        display: '$50',
+        period: '2 to 4 hours',
         features: [
-            'Up to 5 simultaneous streams',
+            '2 to 4 hours stream',
             '1080p HD quality',
             'Full telemetry + analytics',
-            'Airspace radar (100km range)',
+            '14-day recording history',
+        ],
+        badge: '',
+        tier: 'basic',
+    },
+    {
+        id: 'full_day',
+        name: 'Full Day',
+        price: 70,
+        priceUnit: 7000,
+        display: '$70',
+        period: 'up to 24 hours',
+        features: [
+            'Unlimited day stream',
+            '4K quality available',
+            'Airspace radar',
             '30-day recording archive',
-            'Up to 15 team members',
-            'Industry-specific dashboards',
-            'Priority email support',
         ],
         badge: 'MOST POPULAR',
         tier: 'primary',
     },
     {
-        id: 'enterprise',
-        name: 'Enterprise',
-        price: null,
-        priceKobo: null,
-        display: 'Custom',
-        period: 'contact us',
+        id: 'monthly',
+        name: 'Monthly Pro',
+        price: 499,
+        priceUnit: 49900,
+        display: '$499',
+        period: '/month',
         features: [
-            'Unlimited streams & 4K quality',
-            'Full radar (200km+)',
-            'Unlimited recording & archive',
-            'Custom API & webhook integration',
-            'White-label & custom branding',
-            'Dedicated account manager',
-            '99.9% SLA guarantee',
-            'Unlimited team members',
-            'SSO & advanced security',
-            'On-premise deployment option',
+            'Unlimited streams 24/7',
+            'Up to 5 team members',
+            'Unlimited recording',
+            'Industry dashboards',
+            'Priority support',
         ],
-        badge: 'CUSTOM PRICING',
+        badge: 'AGENCY PACK',
         tier: 'accent',
+    },
+    {
+        id: 'yearly',
+        name: 'Yearly Ent.',
+        price: 4990,
+        priceUnit: 499000,
+        display: '$4990',
+        period: '/year',
+        features: [
+            'All Monthly Pro features',
+            '2 Months Free included',
+            'Custom API & Webhooks',
+            'White-label branding',
+            'Dedicated manager',
+        ],
+        badge: 'SAVE 17%',
+        tier: 'basic',
     },
 ];
 
@@ -111,8 +133,8 @@ const PricingPlans = ({ onPlanSelected }) => {
         const handler = window.PaystackPop?.setup({
             key: paystackKey,
             email: user?.email || 'customer@wormhole.app',
-            amount: plan.priceKobo,
-            currency: 'NGN',
+            amount: plan.priceUnit,
+            currency: 'USD',
             ref: `wh_${plan.id}_${Date.now()}`,
             metadata: {
                 plan_id: plan.id,
@@ -178,17 +200,7 @@ const PricingPlans = ({ onPlanSelected }) => {
         setIsProcessing(true);
 
         try {
-            if (plan.id === 'starter') {
-                await upsertSubscription(user.id, plan.id);
-                onPlanSelected(plan);
-            } else if (plan.id === 'enterprise') {
-                // Open email link for custom pricing
-                window.open(`mailto:hello@bornebit.com?subject=Wormhole Enterprise - ${industryInfo.name}&body=Hi, I'm interested in the Enterprise plan for ${industryInfo.name}. Organization: ${orgData.name || 'N/A'}`, '_blank');
-                setIsProcessing(false);
-                setSelectedPlan(null);
-            } else {
-                payWithPaystack(plan);
-            }
+            payWithPaystack(plan);
         } catch (err) {
             console.error('Plan selection error:', err);
             alert('Failed to process. Please try again.');
@@ -281,7 +293,7 @@ const PricingPlans = ({ onPlanSelected }) => {
                 )}
 
                 {/* Plans Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-5 w-full max-w-[1400px]">
                     {PLANS.map((plan) => {
                         const isPrimary = plan.tier === 'primary';
                         const isAccent = plan.tier === 'accent';

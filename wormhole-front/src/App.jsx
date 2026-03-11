@@ -5,6 +5,9 @@ import Login from './components/Login'
 import PricingPlans from './components/PricingPlans'
 import DroneRadar from './components/DroneRadar'
 import IndustryDashboard from './components/IndustryDashboard'
+import DroneTelemetryOSD from './components/DronetelemetryOSD'
+import DroneMap from './components/DroneMap'
+import WeatherAdvisory from './components/WeatherAdvisory'
 import { useAuth } from './contexts/AuthContext'
 import { getSubscription, isSubscriptionActive } from './lib/supabase'
 import './App.css'
@@ -25,7 +28,18 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
+  const [liveTelemetry, setLiveTelemetry] = useState(null);
+  const [flightLog, setFlightLog] = useState([]);
   const { user, loading, signOut, isAuthenticated } = useAuth();
+
+  // Handle telemetry updates from OSD parser
+  const handleTelemetryUpdate = (tel) => {
+    setLiveTelemetry(tel);
+    setFlightLog(prev => {
+      const next = [...prev, { lat: tel.latitude, lon: tel.longitude, alt: tel.altitude, ts: tel.timestamp }];
+      return next.length > 500 ? next.slice(-500) : next;
+    });
+  };
 
   // Get org info
   const orgData = JSON.parse(localStorage.getItem('wormhole_org') || '{}');
@@ -71,8 +85,9 @@ function App() {
   };
 
   const [streamKey, setStreamKey] = useState(() => localStorage.getItem('borbnebit_stream_key') || 'test');
-  // Media server URL — ngrok tunnel to your local NGINX-RTMP Docker container
-  const MEDIA_SERVER = 'https://wavelike-diana-pausefully.ngrok-free.dev';
+  // Media server URL — Cloudflare Tunnel to your local NGINX-RTMP Docker container
+  // No bandwidth limits, no session timeouts (unlike ngrok free tier)
+  const MEDIA_SERVER = 'https://inspection-muscle-ribbon-necessity.trycloudflare.com';
   const defaultServer = MEDIA_SERVER;
   const [hlsServer, setHlsServer] = useState(() => localStorage.getItem('borbnebit_hls_server') || defaultServer);
 
@@ -150,6 +165,9 @@ function App() {
   const navItems = [
     { id: 'dashboard', name: 'Dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
     { id: 'stream', name: 'Live Feeds', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+    { id: 'telemetry', name: 'Telemetry', icon: 'M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6' },
+    { id: 'map', name: 'Map', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
+    { id: 'weather', name: 'Weather', icon: 'M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z' },
     { id: 'radar', name: 'Airspace', icon: 'M9.348 14.651a3.75 3.75 0 010-5.303m5.304 0a3.75 3.75 0 010 5.303m-7.425 2.122a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.79M12 12h.008v.007H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z' },
     { id: 'team', name: 'Team', icon: 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z' },
     { id: 'settings', name: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z' },
@@ -159,7 +177,39 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <IndustryDashboard />;
+        return (
+          <div className="max-w-6xl mx-auto space-y-4">
+            <IndustryDashboard />
+            {/* Quick Status Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <DroneTelemetryOSD compact={true} onTelemetryUpdate={handleTelemetryUpdate} />
+              <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
+              <DroneMap compact={true} telemetry={liveTelemetry} flightPath={flightLog} />
+            </div>
+          </div>
+        );
+
+      case 'telemetry':
+        return (
+          <div className="max-w-6xl mx-auto space-y-4">
+            <DroneTelemetryOSD onTelemetryUpdate={handleTelemetryUpdate} />
+          </div>
+        );
+
+      case 'map':
+        return (
+          <div className="max-w-6xl mx-auto space-y-4">
+            <DroneMap telemetry={liveTelemetry} flightPath={flightLog} />
+            <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
+          </div>
+        );
+
+      case 'weather':
+        return (
+          <div className="max-w-4xl mx-auto">
+            <WeatherAdvisory latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
+          </div>
+        );
 
       case 'radar':
         return (
@@ -377,9 +427,11 @@ function App() {
                   <p className="text-xs text-bornebit-muted mb-3">{industryConfig.icon} {industryConfig.name} — Active drone deployment</p>
                   <div className="space-y-2 font-mono text-xs">
                     {[
-                      { label: 'COORDINATES', value: '6.5244° N, 3.3792° E' },
-                      { label: 'ALTITUDE', value: '1,250 FT' },
-                      { label: 'VELOCITY', value: '45 KNOTS' },
+                      { label: 'COORDINATES', value: liveTelemetry ? `${liveTelemetry.latitude.toFixed(4)}° N, ${liveTelemetry.longitude.toFixed(4)}° E` : '6.5244° N, 3.3792° E' },
+                      { label: 'ALTITUDE', value: liveTelemetry ? `${liveTelemetry.altitudeFt.toFixed(0)} FT` : '— FT' },
+                      { label: 'VELOCITY', value: liveTelemetry ? `${liveTelemetry.speedKnots.toFixed(1)} KNOTS` : '— KNOTS' },
+                      { label: 'HEADING', value: liveTelemetry ? `${liveTelemetry.heading.toFixed(0)}°` : '—°' },
+                      { label: 'V/SPEED', value: liveTelemetry ? `${liveTelemetry.vSpeed > 0 ? '+' : ''}${liveTelemetry.vSpeed.toFixed(1)} M/S` : '— M/S' },
                     ].map(item => (
                       <div key={item.label} className="flex justify-between border-b border-white/5 pb-1">
                         <span className="text-bornebit-muted">{item.label}</span>
@@ -389,11 +441,11 @@ function App() {
                   </div>
                 </div>
 
-                {/* Compact Industry Dashboard or Radar or Globe */}
+                {/* Compact Map or Radar */}
                 {hasRadar ? (
-                  <DroneRadar compact={true} />
+                  <DroneMap compact={true} telemetry={liveTelemetry} flightPath={flightLog} />
                 ) : !isMobile ? (
-                  <IndustryDashboard compact={true} />
+                  <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
                 ) : null}
               </div>
             </div>
@@ -403,10 +455,12 @@ function App() {
               <h3 className="font-bold text-bornebit-primary border-b border-white/5 pb-2 uppercase tracking-wide text-sm">Live Telemetry</h3>
               <div className="space-y-4">
                 {[
-                  { label: 'Battery', value: '87%', color: 'bg-green-500', barWidth: '87%' },
-                  { label: 'Signal', value: '-65 dBm', color: 'bg-green-500', barWidth: '75%' },
-                  { label: 'Speed', value: '42 km/h', color: 'bg-bornebit-primary', barWidth: '60%' },
-                  { label: 'Wind', value: '12 km/h NW', color: 'bg-yellow-500', barWidth: '30%' },
+                  { label: 'Battery', value: liveTelemetry ? `${liveTelemetry.battery.toFixed(0)}%` : '—%', color: liveTelemetry && liveTelemetry.battery < 20 ? 'bg-red-500' : 'bg-green-500', barWidth: liveTelemetry ? `${liveTelemetry.battery}%` : '0%' },
+                  { label: 'Signal', value: liveTelemetry ? `${liveTelemetry.signal.toFixed(0)} dBm` : '— dBm', color: liveTelemetry && liveTelemetry.signal < -90 ? 'bg-red-500' : 'bg-green-500', barWidth: liveTelemetry ? `${Math.max(0, Math.min(100, (liveTelemetry.signal + 120) / 0.8))}%` : '0%' },
+                  { label: 'Speed', value: liveTelemetry ? `${liveTelemetry.speed.toFixed(1)} km/h` : '— km/h', color: 'bg-bornebit-primary', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.speed / 75) * 100)}%` : '0%' },
+                  { label: 'Wind', value: liveTelemetry ? `${liveTelemetry.windSpeed.toFixed(0)} km/h` : '— km/h', color: liveTelemetry && liveTelemetry.windSpeed > 30 ? 'bg-red-500' : 'bg-yellow-500', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.windSpeed / 50) * 100)}%` : '0%' },
+                  { label: 'Altitude', value: liveTelemetry ? `${liveTelemetry.altitude.toFixed(1)} m` : '— m', color: 'bg-cyan-500', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.altitude / 200) * 100)}%` : '0%' },
+                  { label: 'GPS Sats', value: liveTelemetry ? `${liveTelemetry.satellites}` : '—', color: liveTelemetry && liveTelemetry.satellites < 6 ? 'bg-yellow-500' : 'bg-green-500', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.satellites / 18) * 100)}%` : '0%' },
                 ].map(stat => (
                   <div key={stat.label} className="space-y-1.5">
                     <div className="flex justify-between items-center">
@@ -431,6 +485,9 @@ function App() {
                   📋 Copy for VLC
                 </button>
               </div>
+
+              {/* Compact Weather */}
+              <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
 
               {/* Plan Badge */}
               <div className="bg-black/40 rounded-lg p-3 flex items-center justify-between">
@@ -458,7 +515,8 @@ function App() {
                   <p>&gt; Connection established</p>
                   <p>&gt; Stream: {streamKey} @ {hasHD ? '1080p' : '480p'}</p>
                   <p>&gt; Industry: {industryConfig.name}</p>
-                  <p>&gt; Telemetry: Synced</p>
+                  {liveTelemetry && <p>&gt; Telemetry: {liveTelemetry.droneModel} @ {liveTelemetry.altitude.toFixed(1)}m</p>}
+                  {liveTelemetry && <p>&gt; GPS: {liveTelemetry.latitude.toFixed(6)}, {liveTelemetry.longitude.toFixed(6)}</p>}
                   <p className="animate-pulse">&gt; _</p>
                 </div>
               </div>
@@ -624,3 +682,4 @@ function App() {
 }
 
 export default App
+
