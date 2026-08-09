@@ -1,10 +1,9 @@
 # Dependencies
 node_modules/
 
-# Build outputs
+# Build outputs (dev)
 wormhole-front/dist/
 wormhole-front/dist-electron/
-www/app/
 
 # Environment
 .env
@@ -14,6 +13,7 @@ www/app/
 # Logs
 *.log
 npm-debug.log*
+tunnel_log.txt
 
 # OS
 .DS_Store
@@ -26,3 +26,6 @@ Thumbs.db
 # Capacitor
 wormhole-front/android/
 wormhole-front/ios/
+
+# Corrupted git backup
+.git_corrupted/

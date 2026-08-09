@@ -1,82 +1,68 @@
-# Wormhole Stream - Docker Setup Guide
+# Wormhole Stream v3.0 — Streaming Guide
 
 ## Quick Start
 
-### 1. Start the streaming server
-```bash
-cd "C:\Users\neyma\Desktop\toby wrk\.gemini\antigravity\scratch\wormhole-stream"
-docker-compose up -d
+1. **Start the backend** (Docker required):
+   ```
+   deploy-demo.bat
+   ```
+   Or manually:
+   ```powershell
+   docker-compose up -d --build
+   node start-tunnel.mjs
+   ```
+
+2. **Configure OBS** (one-time):
+   - Server: `rtmp://localhost:1935/stream`
+   - Stream Key: `test`
+   - **Encoder Settings** (CRITICAL — must match exactly):
+     - Video Encoder: x264
+     - Rate Control: CBR
+     - Bitrate: 1500 Kbps
+     - Keyframe Interval: **1 second** ← MUST be 1s
+     - CPU Preset: veryfast
+     - Profile: baseline
+     - Tune: zerolatency
+     - Resolution: 1280x720
+
+3. **Start streaming** in OBS — the player will auto-detect within 2-3 seconds.
+
+4. **Share the link**:
+   - Public: `https://neymatoby.github.io/wormhole-stream/`
+   - Login: `demo@bornebit.com` / `demo123`
+
+## How the Streaming Engine Works (v3.0)
+
+```
+OBS → RTMP → NGINX (1s HLS segments) → Cloudflare Tunnel → Player
 ```
 
-### 2. Verify the container is running
-```bash
-docker ps
+### Player State Machine
 ```
-You should see `wormhole-backend` running.
-
-### 3. Start the frontend
-```bash
-cd wormhole-front
-npm run dev
+DISCONNECTED → POLLING → CONNECTING → BUFFERING → LIVE → RECOVERING
+                 ↑                                          ↓
+                 └──────── (stream ends) ──────────────────┘
 ```
 
----
+- **POLLING**: Lightweight fetch() to check if m3u8 exists (every 2s)
+- **CONNECTING**: HLS.js initializing after m3u8 confirmed
+- **BUFFERING**: First fragments loading
+- **LIVE**: Playing live content
+- **RECOVERING**: Temporary network issue, auto-recovering
 
-## Streaming Setup
-
-### Stream to Wormhole (using OBS, drone software, etc.)
-
-| Setting | Value |
-|---------|-------|
-| **RTMP Server** | `rtmp://localhost:1935/stream` |
-| **Stream Key** | `test` (or any name you want) |
-
-### View the Stream
-
-- **HLS URL (Local):** `http://localhost:8080/hls/test.m3u8`
-- **HLS URL (with ngrok):** `https://YOUR_NGROK_URL/hls/test.m3u8`
-
----
-
-## Expose to Internet (ngrok)
-
-If you want to share your stream publicly:
-
-```bash
-ngrok http 8080
-```
-
-Then use the ngrok HTTPS URL in your frontend's "Server" field.
-
----
-
-## Docker Commands
-
-| Command | Description |
-|---------|-------------|
-| `docker-compose up -d` | Start the streaming server |
-| `docker-compose down` | Stop the streaming server |
-| `docker-compose logs -f` | View live logs |
-| `docker-compose restart` | Restart the server |
-
----
-
-## Ports
-
-| Port | Purpose |
-|------|---------|
-| **1935** | RTMP input (stream your video here) |
-| **8080** | HTTP/HLS output (watch stream here) |
-
----
+### Why This Is Fast
+- HLS.js is ONLY created after confirming the stream exists
+- 1s fragments = 3s to first frame (3 fragment minimum for HLS)
+- 500ms retry delay instead of 1-3s
+- 5s manifest timeout instead of 15s
+- No stale data — Docker tmpfs clears on every restart
 
 ## Troubleshooting
 
-### Stream not showing?
-1. Check if container is running: `docker ps`
-2. Check logs: `docker-compose logs -f`
-3. Verify you're streaming to `rtmp://localhost:1935/stream/YOUR_KEY`
-4. Wait 5-10 seconds after starting stream for HLS segments to generate
-
-### CORS issues?
-The nginx_custom.conf includes CORS headers. Make sure docker-compose is using it as a volume mount.
+| Issue | Cause | Fix |
+|---|---|---|
+| Stream never loads | OBS keyframe ≠ 1s | Set Keyframe Interval to exactly 1 second |
+| Black video | Hardware encoder | Use x264 (software), NOT NVENC |
+| 10+ second delay | Old config | Rebuild Docker: `docker-compose up -d --build` |
+| Tunnel expired | Cloudflare temporary URL changed | Re-run `deploy-demo.bat` |
+| Player keeps polling | OBS not streaming | Click "Start Streaming" in OBS |

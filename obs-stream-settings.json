@@ -5,27 +5,29 @@
         "key": "test"
     },
     "obs_output_settings": {
+        "output_mode": "Advanced",
         "video_encoder": "x264 (Software)",
+        "audio_encoder": "FFmpeg AAC",
         "rate_control": "CBR",
-        "bitrate": "2500 Kbps",
+        "bitrate": "1500 Kbps",
         "keyframe_interval": "2 seconds",
+        "cpu_usage_preset": "veryfast",
         "profile": "baseline",
         "tune": "zerolatency",
-        "audio_encoder": "AAC",
-        "audio_bitrate": "128 Kbps",
-        "audio_sample_rate": "44100"
+        "rescale_output": "1280x720",
+        "rescale_filter": "Lanczos (Sharpened scaling, 36 samples)"
     },
     "obs_video_settings": {
         "base_resolution": "1280x720",
         "output_resolution": "1280x720",
         "fps": "30"
     },
-    "IMPORTANT_NOTES": [
-        "In OBS: Settings > Output > Streaming",
-        "Encoder MUST be 'x264' (Software, NOT NVENC or hardware)",
-        "Profile MUST be 'baseline' (not main or high)",
-        "Keyframe Interval: 2 seconds",
-        "Tune: zerolatency (for low latency streaming)",
-        "If you still get black video: try lowering resolution to 854x480"
+    "CRITICAL_NOTES": [
+        "KEYFRAME INTERVAL MUST BE 2 SECONDS — must exactly match NGINX hls_fragment 2s",
+        "Profile MUST be 'baseline' (not main or high) — for widest compatibility",
+        "Tune: zerolatency — minimizes encoding latency",
+        "Bitrate: 1500 Kbps CBR — stable for Cloudflare tunnel bandwidth",
+        "CPU Preset: veryfast — balances quality vs encoding speed",
+        "If black video persists: try lowering resolution to 854x480"
     ]
 }

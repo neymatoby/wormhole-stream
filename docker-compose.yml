@@ -4,14 +4,12 @@ services:
     container_name: wormhole-backend
     restart: unless-stopped
     ports:
-      - "1935:1935"   # RTMP streaming port
+      - "1935:1935"   # RTMP streaming port (OBS sends here)
       - "8080:80"     # HLS/HTTP + Frontend port
-    volumes:
-      # Persistent volume for HLS segments only
-      - wormhole-hls-data:/opt/data/hls
+    # NO persistent volume — stale HLS segments were causing streams
+    # to never load. Fresh start on every container restart is correct
+    # for ephemeral live streaming data.
+    tmpfs:
+      - /opt/data/hls:size=256M
     environment:
       - TZ=Africa/Lagos
-
-volumes:
-  wormhole-hls-data:
-    driver: local

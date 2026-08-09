@@ -1,424 +1,265 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { upsertSubscription } from '../lib/supabase';
+import { motion } from 'framer-motion';
+import { Zap, Shield, Sparkles, Check, Star, Rocket, Crown } from 'lucide-react';
 
-const INDUSTRY_FEATURES = {
-    consultation: {
-        icon: '🏢',
-        name: 'Consultation',
-        features: ['Client project site streams', 'Meeting recording & replay', 'Multi-client portal access', 'Project milestone tracking'],
-    },
-    oil_gas: {
-        icon: '🛢️',
-        name: 'Oil & Gas',
-        features: ['Pipeline inspection streams', 'Facility thermal monitoring', 'Leak detection overlays', 'Compliance recording & archival'],
-    },
-    security: {
-        icon: '🔒',
-        name: 'Security',
-        features: ['Perimeter surveillance feeds', 'Drone detection radar', 'Threat alert notifications', 'Encrypted stream channels'],
-    },
-    agriculture: {
-        icon: '🌾',
-        name: 'Agriculture',
-        features: ['Crop monitoring flyovers', 'NDVI-ready feed support', 'Field boundary mapping', 'Seasonal progress tracking'],
-    },
-    construction: {
-        icon: '🏗️',
-        name: 'Construction',
-        features: ['Site progress timelapse', 'Safety zone monitoring', 'Equipment tracking views', 'Stakeholder sharing links'],
-    },
-};
+/* ─── MagicUI: Border Beam ─── */
+const BorderBeam = ({ color = '#FF5722', duration = 6 }) => (
+  <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+    <div
+      className="absolute w-20 h-20 rounded-full"
+      style={{
+        background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+        offsetPath: `rect(0 100% 100% 0 round 24px)`,
+        animation: `border-beam ${duration}s linear infinite`,
+        offsetRotate: '0deg',
+        filter: `blur(6px)`,
+        opacity: 0.7,
+      }}
+    />
+  </div>
+);
 
-const PLANS = [
-    {
-        id: 'free_trial',
-        name: 'Free Trial',
-        price: 0,
-        priceUnit: 0,
-        display: '$0',
-        period: 'forever',
-        features: [
-            '1080p HD stream quality',
-            'Full dashboard testing',
-            'Basic telemetry dashboard',
-            'No credit card required',
-        ],
-        badge: 'START HERE',
-        tier: 'basic',
-    },
-    {
-        id: 'extended_stream',
-        name: 'Extended',
-        price: 50,
-        priceUnit: 5000,
-        display: '$50',
-        period: '2 to 4 hours',
-        features: [
-            '2 to 4 hours stream',
-            '1080p HD quality',
-            'Full telemetry + analytics',
-            '14-day recording history',
-        ],
-        badge: '',
-        tier: 'basic',
-    },
-    {
-        id: 'full_day',
-        name: 'Full Day',
-        price: 70,
-        priceUnit: 7000,
-        display: '$70',
-        period: 'up to 24 hours',
-        features: [
-            'Unlimited day stream',
-            '4K quality available',
-            'Airspace radar',
-            '30-day recording archive',
-        ],
-        badge: 'MOST POPULAR',
-        tier: 'primary',
-    },
-    {
-        id: 'monthly',
-        name: 'Monthly Pro',
-        price: 499,
-        priceUnit: 49900,
-        display: '$499',
-        period: '/month',
-        features: [
-            'Unlimited streams 24/7',
-            'Up to 5 team members',
-            'Unlimited recording',
-            'Industry dashboards',
-            'Priority support',
-        ],
-        badge: 'AGENCY PACK',
-        tier: 'accent',
-    },
-    {
-        id: 'yearly',
-        name: 'Yearly Ent.',
-        price: 4990,
-        priceUnit: 499000,
-        display: '$4990',
-        period: '/year',
-        features: [
-            'All Monthly Pro features',
-            '2 Months Free included',
-            'Custom API & Webhooks',
-            'White-label branding',
-            'Dedicated manager',
-        ],
-        badge: 'SAVE 17%',
-        tier: 'basic',
-    },
-];
+/* ─── MagicUI: Animated Background ─── */
+const PricingBackground = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {/* Grid */}
+    <div className="absolute inset-0 opacity-[0.03]"
+      style={{
+        backgroundImage: `
+          linear-gradient(rgba(255,87,34,0.4) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,87,34,0.4) 1px, transparent 1px)
+        `,
+        backgroundSize: '80px 80px',
+      }}
+    />
+    {/* Gradient blobs */}
+    <div className="absolute top-[-15%] right-[-5%] w-[600px] h-[600px] bg-bornebit-primary/[0.08] rounded-full blur-[150px]" />
+    <div className="absolute bottom-[-15%] left-[-5%] w-[500px] h-[500px] bg-blue-600/[0.06] rounded-full blur-[120px]" />
+    <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-purple-600/[0.04] rounded-full blur-[100px]" />
+  </div>
+);
 
 const PricingPlans = ({ onPlanSelected }) => {
     const { user } = useAuth();
     const [selectedPlan, setSelectedPlan] = useState(null);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [showIndustryFeatures, setShowIndustryFeatures] = useState(false);
+    const [hoveredPlan, setHoveredPlan] = useState(null);
 
-    // Get user's industry from localStorage
-    const orgData = JSON.parse(localStorage.getItem('wormhole_org') || '{}');
-    const userIndustry = orgData.industry || 'security';
-    const industryInfo = INDUSTRY_FEATURES[userIndustry];
-
-    // Initialize Paystack inline payment
-    const payWithPaystack = (plan) => {
-        const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_xxxxxxxxxxxxx';
-
-        const handler = window.PaystackPop?.setup({
-            key: paystackKey,
-            email: user?.email || 'customer@wormhole.app',
-            amount: plan.priceUnit,
-            currency: 'USD',
-            ref: `wh_${plan.id}_${Date.now()}`,
-            metadata: {
-                plan_id: plan.id,
-                plan_name: plan.name,
-                user_id: user?.id,
-                industry: userIndustry,
-                custom_fields: [
-                    {
-                        display_name: 'Plan',
-                        variable_name: 'plan',
-                        value: plan.name,
-                    },
-                    {
-                        display_name: 'Industry',
-                        variable_name: 'industry',
-                        value: userIndustry,
-                    }
-                ]
-            },
-            callback: async (response) => {
-                console.log('Paystack success:', response);
-                try {
-                    await upsertSubscription(user.id, plan.id, {
-                        customerId: response.reference,
-                        subscriptionId: response.trans || response.transaction,
-                    });
-                    onPlanSelected(plan);
-                } catch (err) {
-                    console.error('Subscription save error:', err);
-                    onPlanSelected(plan);
-                }
-            },
-            onClose: () => {
-                console.log('Payment window closed');
-                setIsProcessing(false);
-                setSelectedPlan(null);
-            },
-        });
-
-        if (handler) {
-            handler.openIframe();
-        } else {
-            console.warn('Paystack not loaded, running in demo mode');
-            handleDemoPayment(plan);
-        }
+    const handleSelectPlan = (planId) => {
+        setSelectedPlan(planId);
+        setTimeout(() => {
+            onPlanSelected({ id: planId });
+        }, 1000);
     };
 
-    const handleDemoPayment = async (plan) => {
-        try {
-            await upsertSubscription(user.id, plan.id, {
-                customerId: `demo_cus_${Date.now()}`,
-                subscriptionId: `demo_sub_${Date.now()}`,
-            });
-            onPlanSelected(plan);
-        } catch (err) {
-            console.error('Demo subscription error:', err);
-            onPlanSelected(plan);
-        }
-    };
-
-    const handleSelectPlan = async (plan) => {
-        setSelectedPlan(plan.id);
-        setIsProcessing(true);
-
-        try {
-            if (plan.price === 0) {
-                await handleDemoPayment(plan);
-                return;
-            }
-            payWithPaystack(plan);
-        } catch (err) {
-            console.error('Plan selection error:', err);
-            alert('Failed to process. Please try again.');
-            setIsProcessing(false);
-            setSelectedPlan(null);
-        }
-    };
+    const plans = [
+      {
+        id: 'free_trial',
+        name: 'Starter',
+        price: '$0',
+        period: '/ 14 days',
+        description: 'Perfect for evaluating the platform',
+        icon: <Shield size={24} />,
+        color: 'from-gray-400 to-gray-300',
+        borderColor: 'border-white/10 hover:border-white/20',
+        features: [
+          'Full Map & Weather access',
+          '1080p HD Streaming',
+          'Follow computer location',
+          'Basic analytics dashboard',
+        ],
+        buttonStyle: 'bg-white/[0.06] hover:bg-white/10 border border-white/10 hover:border-white/20',
+        buttonText: 'Start Free Trial',
+      },
+      {
+        id: 'pro_version',
+        name: 'Professional',
+        price: '$99',
+        period: '/ month',
+        description: 'For teams and commercial operations',
+        icon: <Crown size={24} />,
+        color: 'from-bornebit-primary to-bornebit-accent',
+        borderColor: 'border-bornebit-primary/30',
+        recommended: true,
+        features: [
+          'Everything in Starter',
+          'Unlimited 4K Streaming',
+          'Multi-device location tracking',
+          '24/7 Priority Support',
+          'Custom OBS integration',
+          'API access & webhooks',
+        ],
+        buttonStyle: 'bg-gradient-to-r from-bornebit-primary to-bornebit-accent shadow-xl shadow-bornebit-primary/30',
+        buttonText: 'Go Pro',
+      }
+    ];
 
     return (
-        <div className="min-h-screen w-full bg-bornebit-gradient relative overflow-hidden flex flex-col">
-            {/* Background effects */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-bornebit-primary/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-bornebit-accent/5 rounded-full blur-3xl" />
-                {/* Grid pattern */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,87,34,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,87,34,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-            </div>
+        <div className="min-h-screen w-full bg-[#030014] relative overflow-hidden flex flex-col justify-center items-center p-6">
+            <PricingBackground />
 
             {/* Header */}
-            <header className="relative z-10 py-4 md:py-6 px-4 md:px-8">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-bornebit-primary to-bornebit-accent rounded-xl flex items-center justify-center shadow-lg shadow-bornebit-primary/30">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
+            <div className="text-center mb-14 relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="inline-flex items-center gap-2 bg-bornebit-primary/10 border border-bornebit-primary/20 rounded-full px-4 py-1.5 mb-6"
+                >
+                    <Sparkles size={14} className="text-bornebit-primary" />
+                    <span className="text-xs font-bold text-bornebit-primary tracking-wider font-[family-name:'JetBrains_Mono',monospace]">PRICING</span>
+                </motion.div>
+                <motion.h1 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-4xl md:text-6xl font-black text-white mb-5 tracking-tight"
+                >
+                    Choose Your{' '}
+                    <span className="gradient-text-animated">Access</span>
+                </motion.h1>
+                <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-gray-500 text-base max-w-xl mx-auto leading-relaxed"
+                >
+                    Start with our 14-day Free Trial or go Pro for unlimited streaming and advanced features.
+                </motion.p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl relative z-10">
+                {plans.map((plan, idx) => (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + idx * 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    onMouseEnter={() => setHoveredPlan(plan.id)}
+                    onMouseLeave={() => setHoveredPlan(null)}
+                    className={`relative group ${plan.recommended ? 'md:-mt-4 md:mb-[-16px]' : ''}`}
+                  >
+                    {/* Shimmer border for recommended */}
+                    {plan.recommended && (
+                      <>
+                        <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-bornebit-primary via-amber-500 to-bornebit-primary opacity-40 group-hover:opacity-70 transition-opacity duration-500"
+                          style={{ backgroundSize: '200% 200%', animation: 'shimmer-move 3s linear infinite' }}
+                        />
+                        <BorderBeam color="#FF5722" duration={5} />
+                      </>
+                    )}
+
+                    <div className={`relative h-full glass-morphism-strong rounded-3xl p-8 md:p-10 flex flex-col transition-all duration-500 ${
+                      plan.recommended ? 'ring-1 ring-bornebit-primary/20' : `border ${plan.borderColor}`
+                    } ${hoveredPlan === plan.id ? 'translate-y-[-4px]' : ''}`}>
+
+                      {/* Recommended badge */}
+                      {plan.recommended && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-bornebit-primary to-bornebit-accent text-white text-[10px] font-black uppercase tracking-[0.2em] px-5 py-1.5 rounded-full shadow-xl shadow-bornebit-primary/40 flex items-center gap-1.5"
+                        >
+                          <Star size={10} className="fill-white" /> RECOMMENDED
+                        </motion.div>
+                      )}
+
+                      {/* Icon + Name */}
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center text-white shadow-lg ${
+                          plan.recommended ? 'shadow-bornebit-primary/30' : 'shadow-white/5'
+                        }`}>
+                          {plan.icon}
                         </div>
                         <div>
-                            <span className="text-xl font-extrabold text-bornebit-primary tracking-tight">WORMHOLE</span>
-                            <span className="text-[10px] text-gray-500 block -mt-0.5">Multi-Industry SaaS</span>
+                          <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                          <p className="text-xs text-gray-500">{plan.description}</p>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {orgData.name && (
-                            <span className="text-xs text-gray-400 hidden md:block bg-white/5 border border-white/10 rounded-lg px-3 py-1.5">
-                                {industryInfo?.icon} {orgData.name}
-                            </span>
-                        )}
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bornebit-primary to-bornebit-accent flex items-center justify-center text-xs font-bold uppercase">
-                            {user?.email?.charAt(0) || 'U'}
-                        </div>
-                    </div>
-                </div>
-            </header>
+                      </div>
 
-            {/* Main Content */}
-            <div className="flex-1 relative z-10 px-4 md:px-8 pb-8 flex flex-col items-center justify-center">
-                <div className="text-center mb-6 md:mb-10">
-                    <div className="inline-flex items-center gap-2 bg-bornebit-primary/10 border border-bornebit-primary/30 rounded-full px-4 py-1.5 mb-4">
-                        <div className="w-2 h-2 rounded-full bg-bornebit-primary animate-pulse"></div>
-                        <span className="text-xs font-semibold text-bornebit-primary uppercase tracking-wider">Choose Your Plan</span>
-                    </div>
-                    <h1 className="text-2xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">
-                        Drone Streaming for Every Agency
-                    </h1>
-                    <p className="text-bornebit-muted text-sm md:text-base max-w-xl mx-auto">
-                        {industryInfo?.icon} Built for <span className="text-bornebit-primary font-semibold">{industryInfo?.name}</span> teams.
-                        Real-time aerial surveillance, telemetry, and analytics. Start free, scale when funded.
-                    </p>
-                </div>
+                      {/* Price */}
+                      <div className="mb-8">
+                        <span className="text-5xl font-black text-white">{plan.price}</span>
+                        <span className="text-base font-normal text-gray-500 ml-1">{plan.period}</span>
+                      </div>
 
-                {/* Industry-Specific Feature Banner */}
-                <button
-                    onClick={() => setShowIndustryFeatures(!showIndustryFeatures)}
-                    className="mb-6 bg-gradient-to-r from-bornebit-primary/10 to-bornebit-accent/10 border border-bornebit-primary/20 rounded-xl px-5 py-3 flex items-center gap-3 hover:border-bornebit-primary/40 transition-all max-w-lg w-full"
-                >
-                    <span className="text-2xl">{industryInfo?.icon}</span>
-                    <div className="text-left flex-1">
-                        <div className="text-sm font-bold text-white">{industryInfo?.name} Features Included</div>
-                        <div className="text-xs text-gray-400">Click to see industry-specific capabilities</div>
-                    </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-5 h-5 text-bornebit-primary transition-transform ${showIndustryFeatures ? 'rotate-180' : ''}`}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                    </svg>
-                </button>
-
-                {showIndustryFeatures && (
-                    <div className="mb-6 bg-bornebit-surface border border-white/10 rounded-xl p-5 max-w-lg w-full animate-in">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {industryInfo?.features.map((feature, i) => (
-                                <div key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-bornebit-primary shrink-0">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                    </svg>
-                                    {feature}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Plans Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-5 w-full max-w-[1400px]">
-                    {PLANS.map((plan) => {
-                        const isPrimary = plan.tier === 'primary';
-                        const isAccent = plan.tier === 'accent';
-
-                        return (
-                            <div
-                                key={plan.id}
-                                className={`relative rounded-2xl p-5 md:p-8 flex flex-col transition-all duration-300 ${isPrimary
-                                    ? 'bg-gradient-to-b from-bornebit-primary/20 to-bornebit-surface border-2 border-bornebit-primary shadow-2xl shadow-bornebit-primary/20 md:scale-105 md:-my-2'
-                                    : isAccent
-                                        ? 'bg-gradient-to-b from-bornebit-accent/10 to-bornebit-surface border border-bornebit-accent/30'
-                                        : 'bg-bornebit-surface border border-white/10'
-                                    } hover:border-bornebit-primary/50`}
-                            >
-                                {/* Badge */}
-                                {plan.badge && (
-                                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${isPrimary
-                                        ? 'bg-bornebit-primary text-white shadow-lg shadow-bornebit-primary/40'
-                                        : isAccent
-                                            ? 'bg-gradient-to-r from-bornebit-accent to-yellow-500 text-black'
-                                            : 'bg-white/10 text-gray-400'
-                                        }`}>
-                                        {plan.badge}
-                                    </div>
-                                )}
-
-                                <h3 className="text-lg font-bold text-white mt-2 mb-1">{plan.name}</h3>
-
-                                {/* Price */}
-                                <div className="flex items-baseline gap-1 mb-2">
-                                    {plan.price === 0 ? (
-                                        <span className="text-3xl md:text-4xl font-extrabold text-white">Free</span>
-                                    ) : plan.price === null ? (
-                                        <span className="text-2xl md:text-3xl font-extrabold text-white">Custom</span>
-                                    ) : (
-                                        <>
-                                            <span className="text-2xl md:text-3xl font-extrabold text-white">{plan.display}</span>
-                                            <span className="text-sm text-bornebit-muted">{plan.period}</span>
-                                        </>
-                                    )}
-                                </div>
-                                <div className="mb-4"></div>
-
-                                {/* Features */}
-                                <ul className="space-y-3 mb-8 flex-1">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 mt-0.5 shrink-0 ${isPrimary ? 'text-bornebit-primary' : isAccent ? 'text-bornebit-accent' : 'text-gray-500'}`}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                            </svg>
-                                            {feature}
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                {/* CTA */}
-                                <button
-                                    onClick={() => handleSelectPlan(plan)}
-                                    disabled={isProcessing && selectedPlan === plan.id}
-                                    className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] ${isPrimary
-                                        ? 'bg-gradient-to-r from-bornebit-primary to-bornebit-accent text-white shadow-lg shadow-bornebit-primary/30 hover:opacity-90'
-                                        : isAccent
-                                            ? 'bg-gradient-to-r from-bornebit-accent to-yellow-500 text-black shadow-lg shadow-bornebit-accent/30 hover:opacity-90'
-                                            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
-                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                >
-                                    {isProcessing && selectedPlan === plan.id ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                            </svg>
-                                            Processing...
-                                        </span>
-                                    ) : plan.price === 0 ? 'Start Free' : plan.price === null ? 'Contact Sales' : `Subscribe ${plan.display}`}
-                                </button>
+                      {/* Feature list */}
+                      <ul className="space-y-4 mb-10 flex-1">
+                        {plan.features.map((feature, i) => (
+                          <motion.li
+                            key={i}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 + i * 0.05 }}
+                            className="flex items-center gap-3 text-gray-300 text-sm"
+                          >
+                            <div className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 ${
+                              plan.recommended ? 'bg-bornebit-primary/20 text-bornebit-primary' : 'bg-white/5 text-gray-400'
+                            }`}>
+                              <Check size={12} strokeWidth={3} />
                             </div>
-                        );
-                    })}
-                </div>
+                            {feature}
+                          </motion.li>
+                        ))}
+                      </ul>
 
-                {/* Trust indicators */}
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs text-bornebit-muted">
-                    <div className="flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-green-500">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                        </svg>
-                        SSL Encrypted
+                      {/* CTA Button */}
+                      <motion.button
+                        onClick={() => handleSelectPlan(plan.id)}
+                        disabled={selectedPlan !== null}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`w-full relative overflow-hidden py-4 rounded-2xl font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed ${plan.buttonStyle}`}
+                      >
+                        {plan.recommended && (
+                          <div className="absolute inset-0" style={{
+                            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                            animation: 'shine-sweep 3s ease-in-out infinite',
+                          }} />
+                        )}
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                          {selectedPlan === plan.id ? (
+                            <>
+                              <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}>
+                                <Sparkles size={16} />
+                              </motion.div>
+                              Initializing...
+                            </>
+                          ) : (
+                            <>
+                              {plan.recommended ? <Rocket size={16} /> : <Zap size={16} />}
+                              {plan.buttonText}
+                            </>
+                          )}
+                        </span>
+                      </motion.button>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-green-500">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41C18.93 5.77 22 8.65 22 12c0 2.08-.8 3.97-2.1 5.39z" />
-                        </svg>
-                        Powered by Paystack
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-green-500">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                        </svg>
-                        Cards, Bank Transfer, USSD
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-green-500">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Cancel anytime
-                    </div>
-                </div>
-
-                {/* Industries served */}
-                <div className="mt-6 bg-white/5 border border-white/10 rounded-xl px-6 py-4 max-w-lg text-center">
-                    <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">Trusted across industries</p>
-                    <div className="flex items-center justify-center gap-4 text-lg">
-                        <span title="Consultation">🏢</span>
-                        <span title="Oil & Gas">🛢️</span>
-                        <span title="Security">🔒</span>
-                        <span title="Agriculture">🌾</span>
-                        <span title="Construction">🏗️</span>
-                    </div>
-                </div>
+                  </motion.div>
+                ))}
             </div>
+
+            {/* Bottom trust badges */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="relative z-10 mt-12 flex items-center gap-6 text-gray-600"
+            >
+              <div className="flex items-center gap-2">
+                <Shield size={14} />
+                <span className="text-[11px] font-[family-name:'JetBrains_Mono',monospace]">SSL Secured</span>
+              </div>
+              <div className="w-px h-4 bg-white/10" />
+              <div className="flex items-center gap-2">
+                <Zap size={14} />
+                <span className="text-[11px] font-[family-name:'JetBrains_Mono',monospace]">Cancel Anytime</span>
+              </div>
+              <div className="w-px h-4 bg-white/10" />
+              <div className="flex items-center gap-2">
+                <Star size={14} />
+                <span className="text-[11px] font-[family-name:'JetBrains_Mono',monospace]">99.9% Uptime</span>
+              </div>
+            </motion.div>
         </div>
     );
 };

@@ -1,90 +1,205 @@
-import { useState, useEffect } from 'react'
-import VideoPlayer from './components/VideoPlayer'
-import { Globe } from './components/Globe'
-import Login from './components/Login'
-import PricingPlans from './components/PricingPlans'
-import DroneRadar from './components/DroneRadar'
-import IndustryDashboard from './components/IndustryDashboard'
-import DroneTelemetryOSD from './components/DronetelemetryOSD'
-import DroneMap from './components/DroneMap'
-import WeatherAdvisory from './components/WeatherAdvisory'
-import { useAuth } from './contexts/AuthContext'
-import { getSubscription, isSubscriptionActive } from './lib/supabase'
-import './App.css'
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import VideoPlayer from './components/VideoPlayer';
+import Login from './components/Login';
+import PricingPlans from './components/PricingPlans';
+import DroneMap from './components/DroneMap';
+import WeatherAdvisory from './components/WeatherAdvisory';
+import StreamQRCode from './components/QRCode';
+import { useAuth } from './contexts/AuthContext';
+import { getSubscription, isSubscriptionActive } from './lib/supabase';
+import { 
+  LayoutDashboard, 
+  Video, 
+  Settings, 
+  LogOut, 
+  MapPin, 
+  CloudSun,
+  Wifi,
+  Copy,
+  Check,
+  Zap,
+  Globe,
+  Compass,
+  Sparkles,
+  Activity,
+  Shield,
+  Radio,
+  QrCode,
+  Share2,
+  Navigation,
+  Crosshair,
+  RotateCcw,
+  Edit3
+} from 'lucide-react';
+import './App.css';
 
-// Industry config for theming
-const INDUSTRY_CONFIG = {
-  consultation: { icon: '🏢', name: 'Consultation', color: 'text-blue-400' },
-  oil_gas: { icon: '🛢️', name: 'Oil & Gas', color: 'text-amber-400' },
-  security: { icon: '🔒', name: 'Security', color: 'text-red-400' },
-  agriculture: { icon: '🌾', name: 'Agriculture', color: 'text-green-400' },
-  construction: { icon: '🏗️', name: 'Construction', color: 'text-violet-400' },
+/* ═══════════════════════════════════════════════════════════════
+   MagicUI-Inspired Animated Components
+   ═══════════════════════════════════════════════════════════════ */
+
+/** ShimmerBorder — a card with an animated rainbow/gradient border shimmer */
+const ShimmerCard = ({ children, className = '', borderColor = 'from-bornebit-primary via-purple-500 to-blue-500' }) => (
+  <div className={`relative group ${className}`}>
+    {/* Animated shimmer border */}
+    <div className={`absolute -inset-[1px] rounded-3xl bg-gradient-to-r ${borderColor} opacity-20 group-hover:opacity-50 blur-sm transition-opacity duration-700`} />
+    <div className={`absolute -inset-[1px] rounded-3xl bg-gradient-to-r ${borderColor} opacity-15 group-hover:opacity-35 transition-opacity duration-700`}
+      style={{ backgroundSize: '200% 200%', animation: 'shimmer-move 3s linear infinite' }} />
+    {/* Card content */}
+    <div className="relative bg-[#0a0a1a]/80 backdrop-blur-2xl rounded-3xl border border-white/[0.06] overflow-hidden">
+      {children}
+    </div>
+  </div>
+);
+
+/** GlowOrb — subtle floating glowing orbs for background ambiance */
+const GlowOrb = ({ color, size, top, left, delay = 0 }) => (
+  <motion.div
+    className="absolute rounded-full pointer-events-none"
+    style={{ width: size, height: size, top, left, background: color, filter: `blur(${parseInt(size)/2}px)` }}
+    animate={{ y: [0, -30, 0], x: [0, 15, 0], scale: [1, 1.1, 1] }}
+    transition={{ duration: 8, repeat: Infinity, delay, ease: 'easeInOut' }}
+  />
+);
+
+/** Particles — floating dots for ambiance */
+const Particles = () => {
+  const particles = Array.from({ length: 25 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2.5 + 0.5,
+    duration: Math.random() * 12 + 8,
+    delay: Math.random() * 5,
+  }));
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full"
+          style={{
+            left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size,
+            background: p.id % 3 === 0 ? 'rgba(255,87,34,0.4)' : p.id % 3 === 1 ? 'rgba(139,92,246,0.3)' : 'rgba(59,130,246,0.3)',
+          }}
+          animate={{ y: [0, -120, 0], opacity: [0, 0.8, 0] }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  );
 };
 
+/** AnimatedNumber — MagicUI-style number counter */
+const AnimatedNumber = ({ value, suffix = '' }) => {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const end = parseFloat(value);
+    if (isNaN(end)) { setDisplay(value); return; }
+    const duration = 1200;
+    const startTime = performance.now();
+    const animate = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay((start + (end - start) * eased).toFixed(suffix === '°' ? 0 : 6));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [value]);
+  return <span>{display}{suffix}</span>;
+};
+
+/** MagicUI: Dot Pattern Background */
+const DotPattern = () => (
+  <div className="absolute inset-0 pointer-events-none dot-pattern opacity-30" />
+);
+
+/** MagicUI: Spotlight effect on hover for sidebar */
+const SidebarSpotlight = ({ activeTab }) => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    <motion.div
+      className="absolute w-40 h-40 rounded-full"
+      style={{
+        background: 'radial-gradient(circle, rgba(255,87,34,0.08) 0%, transparent 70%)',
+        filter: 'blur(20px)',
+      }}
+      animate={{
+        top: activeTab === 'dashboard' ? '20%' : activeTab === 'stream' ? '35%' : '50%',
+        left: '20%',
+      }}
+      transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+    />
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════════════ */
+
+const DEFAULT_LOC = { lat: 6.5244, lon: 3.3792 };
+
+const GPS_PRESETS = [
+  { name: 'Lagos Main', lat: 6.5244, lon: 3.3792, flag: '🇳🇬' },
+  { name: 'Victoria Island', lat: 6.4281, lon: 3.4219, flag: '🏝️' },
+  { name: 'Ikeja Airport', lat: 6.5774, lon: 3.3212, flag: '✈️' },
+  { name: 'Port Harcourt', lat: 4.7719, lon: 7.0140, flag: '⛽' },
+  { name: 'Abuja Central', lat: 9.0765, lon: 7.3986, flag: '🏛️' },
+];
+
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [showSettings, setShowSettings] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
-  const [liveTelemetry, setLiveTelemetry] = useState(null);
-  const [flightLog, setFlightLog] = useState([]);
-  const { user, loading, signOut, isAuthenticated, isDemo, demoStartTime } = useAuth();
+  const [location, setLocation] = useState(DEFAULT_LOC);
+  const [inputLat, setInputLat] = useState(DEFAULT_LOC.lat.toString());
+  const [inputLon, setInputLon] = useState(DEFAULT_LOC.lon.toString());
+  const [flightPath, setFlightPath] = useState([{ lat: 6.5244, lon: 3.3792 }]);
+  const [copied, setCopied] = useState(false);
+  
+  const { user, loading, signOut, signIn, isAuthenticated, isDemo } = useAuth();
 
-  // ── Demo timer (10 min = 600 s) ───────────────────────────────────────────
-  const DEMO_DURATION = 10 * 60; // seconds
-  const [demoSecondsLeft, setDemoSecondsLeft] = useState(DEMO_DURATION);
-  const [demoExpired, setDemoExpired] = useState(false);
-
-  useEffect(() => {
-    if (!isDemo || !demoStartTime) return;
-    const tick = () => {
-      const elapsed = Math.floor((Date.now() - demoStartTime) / 1000);
-      const remaining = Math.max(0, DEMO_DURATION - elapsed);
-      setDemoSecondsLeft(remaining);
-      if (remaining === 0) setDemoExpired(true);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [isDemo, demoStartTime]);
-
-  const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  // ─────────────────────────────────────────────────────────────────────────
-
-  // Handle telemetry updates from OSD parser
-  const handleTelemetryUpdate = (tel) => {
-    setLiveTelemetry(tel);
-    setFlightLog(prev => {
-      const next = [...prev, { lat: tel.latitude, lon: tel.longitude, alt: tel.altitude, ts: tel.timestamp }];
-      return next.length > 500 ? next.slice(-500) : next;
-    });
+  const updateGpsCoordinates = (latVal, lonVal) => {
+    const latNum = parseFloat(latVal);
+    const lonNum = parseFloat(lonVal);
+    if (!isNaN(latNum) && !isNaN(lonNum)) {
+      const newPos = { lat: latNum, lon: lonNum };
+      setLocation(newPos);
+      setInputLat(latNum.toFixed(4));
+      setInputLon(lonNum.toFixed(4));
+      setFlightPath((prev) => [...prev.slice(-49), newPos]);
+    }
   };
 
-  // Get org info
-  const orgData = JSON.parse(localStorage.getItem('wormhole_org') || '{}');
-  const userIndustry = orgData.industry || 'security';
-  const industryConfig = INDUSTRY_CONFIG[userIndustry] || INDUSTRY_CONFIG.security;
+  const handleDeviceGps = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => updateGpsCoordinates(pos.coords.latitude, pos.coords.longitude),
+        (err) => console.warn('Geolocation error:', err),
+        { enableHighAccuracy: true }
+      );
+    }
+  };
 
-  // Responsive detection
+  // Track browser/device location on load
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) setIsSidebarOpen(false);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => updateGpsCoordinates(pos.coords.latitude, pos.coords.longitude),
+        (err) => console.warn('Geolocation error:', err)
+      );
+      const watcher = navigator.geolocation.watchPosition(
+        (pos) => updateGpsCoordinates(pos.coords.latitude, pos.coords.longitude),
+        (err) => console.warn('Geolocation error:', err),
+        { enableHighAccuracy: true }
+      );
+      return () => navigator.geolocation.clearWatch(watcher);
+    }
   }, []);
 
-  // Check subscription status
+  // Check subscription
   useEffect(() => {
     const checkSub = async () => {
-      if (!user) {
-        setSubLoading(false);
-        return;
-      }
+      if (!user) { setSubLoading(false); return; }
+      if (isDemo) { setSubLoading(false); return; }
       try {
         const sub = await getSubscription(user.id);
         setSubscription(sub);
@@ -95,8 +210,9 @@ function App() {
       }
     };
     checkSub();
-  }, [user]);
+  }, [user, isDemo]);
 
+  // Stream state
   const playerOptions = {
     autoplay: false,
     controls: true,
@@ -104,13 +220,41 @@ function App() {
     fluid: true,
     poster: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?q=80&w=2670&auto=format&fit=crop",
   };
+  const BUILD_TUNNEL_URL = import.meta.env.VITE_TUNNEL_URL || 'http://localhost:8080';
+  
+  // Read URL query params OR active tunnel domain immediately on component state initialization
+  const [hlsServer, setHlsServer] = useState(() => {
+    // 1. URL query param from scanned QR code
+    const params = new URLSearchParams(window.location.search);
+    const tunnelFromUrl = params.get('tunnel');
+    if (tunnelFromUrl) {
+      localStorage.setItem('borbnebit_hls_server', tunnelFromUrl);
+      return tunnelFromUrl;
+    }
 
-  const [streamKey, setStreamKey] = useState(() => localStorage.getItem('borbnebit_stream_key') || 'test');
-  // Media server URL — Cloudflare Tunnel to your local NGINX-RTMP Docker container
-  // No bandwidth limits, no session timeouts (unlike ngrok free tier)
-  const MEDIA_SERVER = 'https://walked-marvel-recipe-tba.trycloudflare.com';
-  const defaultServer = MEDIA_SERVER;
-  const [hlsServer, setHlsServer] = useState(() => localStorage.getItem('borbnebit_hls_server') || defaultServer);
+    // 2. Active Cloudflare / ngrok origin if opened on tunnel directly
+    const origin = window.location.origin;
+    if (origin.includes('trycloudflare.com') || origin.includes('ngrok')) {
+      localStorage.setItem('borbnebit_hls_server', origin);
+      return origin;
+    }
+
+    // 3. Saved localStorage value
+    const saved = localStorage.getItem('borbnebit_hls_server');
+    if (saved) return saved;
+
+    return BUILD_TUNNEL_URL;
+  });
+
+  const [streamKey, setStreamKey] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const keyFromUrl = params.get('key');
+    if (keyFromUrl) {
+      localStorage.setItem('borbnebit_stream_key', keyFromUrl);
+      return keyFromUrl;
+    }
+    return localStorage.getItem('borbnebit_stream_key') || 'test';
+  });
 
   const getStreamUrl = (server, key) => {
     let base = server.trim();
@@ -118,647 +262,599 @@ function App() {
     if (base.endsWith('/')) base = base.slice(0, -1);
     return `${base}/hls/${key}.m3u8`;
   };
-
   const streamUrl = getStreamUrl(hlsServer, streamKey);
 
-  const handleServerChange = (val) => {
-    setHlsServer(val);
-    localStorage.setItem('borbnebit_hls_server', val);
+  // Public tunnel URL — auto-detects from active origin if running on a tunnel
+  const [publicTunnelUrl, setPublicTunnelUrl] = useState(() => {
+    const origin = window.location.origin;
+    if (origin.includes('trycloudflare.com') || origin.includes('ngrok')) {
+      return origin;
+    }
+    const saved = localStorage.getItem('wormhole_public_tunnel_url');
+    if (saved) return saved;
+    if (hlsServer && hlsServer.includes('.trycloudflare.com')) {
+      return hlsServer;
+    }
+    if (BUILD_TUNNEL_URL && BUILD_TUNNEL_URL !== 'http://localhost:8080' && !BUILD_TUNNEL_URL.includes('localhost')) {
+      return BUILD_TUNNEL_URL;
+    }
+    return 'https://wed-encoding-sand-crystal.trycloudflare.com';
+  });
+
+  // Base web app URL for QR code — uses publicTunnelUrl if available, or current origin with LAN IP for mobile access
+  const currentOrigin = window.location.origin;
+  const hostName = window.location.hostname;
+  const lanHost = (hostName === 'localhost' || hostName === '127.0.0.1') ? '192.168.10.93' : hostName;
+  const portSuffix = window.location.port ? `:${window.location.port}` : '';
+  const lanAppUrl = `${window.location.protocol}//${lanHost}${portSuffix}`;
+
+  const baseAppUrl = publicTunnelUrl || lanAppUrl;
+
+  const viewerHlsServer = publicTunnelUrl || (hlsServer.includes('localhost') || hlsServer.includes('127.0.0.1')
+    ? hlsServer.replace(/localhost|127\.0\.0\.1/, '192.168.10.93')
+    : hlsServer);
+
+  const qrCodeUrl = `${baseAppUrl.endsWith('/') ? baseAppUrl : baseAppUrl + '/'}?tunnel=${encodeURIComponent(viewerHlsServer)}&key=${encodeURIComponent(streamKey)}`;
+
+  const handlePublicUrlChange = (val) => {
+    setPublicTunnelUrl(val);
+    localStorage.setItem('wormhole_public_tunnel_url', val);
   };
 
-  const handleKeyChange = (val) => {
-    setStreamKey(val);
-    localStorage.setItem('borbnebit_stream_key', val);
-  };
+  // ── Auto-fetch active Cloudflare tunnel URL from tunnel.json ─────────────────
+  useEffect(() => {
+    fetch('/tunnel.json?t=' + Date.now())
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.url && data.url.includes('.trycloudflare.com')) {
+          setPublicTunnelUrl(data.url);
+          setHlsServer((prev) => (prev.includes('localhost') ? data.url : prev));
+          localStorage.setItem('wormhole_public_tunnel_url', data.url);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  const copyVlcLink = () => {
+  // ── Auto-configure from URL query params or origin (for QR code viewers) ──────
+  // When someone scans the QR code, the URL contains ?tunnel=...&key=...
+  // We auto-login as demo, set the stream source, and jump to live view
+  const qrParamsRef = useRef(() => {
+    const params = new URLSearchParams(window.location.search);
+    let tunnel = params.get('tunnel');
+    let key = params.get('key');
+
+    // Auto-detect if currently opened on a Cloudflare or ngrok tunnel URL directly
+    const origin = window.location.origin;
+    if (!tunnel && (origin.includes('trycloudflare.com') || origin.includes('ngrok'))) {
+      tunnel = origin;
+    }
+
+    if (params.get('tunnel')) {
+      // Clean the URL query params so they don't persist on manual refresh
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    return { tunnel, key };
+  });
+  const [qrParams] = useState(() => qrParamsRef.current());
+
+  useEffect(() => {
+    if (qrParams.tunnel) {
+      // Set the HLS server to the tunnel URL
+      setHlsServer(qrParams.tunnel);
+      localStorage.setItem('borbnebit_hls_server', qrParams.tunnel);
+
+      if (qrParams.key) {
+        setStreamKey(qrParams.key);
+        localStorage.setItem('borbnebit_stream_key', qrParams.key);
+      }
+
+      // Jump to live stream tab
+      setActiveTab('stream');
+    }
+
+    // Auto-login as demo if not already authenticated
+    if (!loading && !isAuthenticated && (qrParams.tunnel || window.location.search.includes('tunnel'))) {
+      signIn('demo@bornebit.com', 'demo123').catch(() => {});
+    }
+  }, [loading, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleServerChange = (val) => { setHlsServer(val); localStorage.setItem('borbnebit_hls_server', val); };
+  const handleKeyChange = (val) => { setStreamKey(val); localStorage.setItem('borbnebit_stream_key', val); };
+  const handlePlanSelected = (plan) => { setSubscription({ plan_id: plan.id, status: 'active', expires_at: '2099-12-31' }); };
+
+  const handleCopy = () => {
     navigator.clipboard.writeText(streamUrl);
-    alert(`Copied to clipboard!\n\nOpen VLC → Media → Open Network Stream → Paste:\n${streamUrl}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  // Handle plan selection from pricing page
-  const handlePlanSelected = (plan) => {
-    setSubscription({ plan_id: plan.id, status: 'active', expires_at: '2099-12-31' });
-  };
-
-  // Loading state
+  // Auth/Load screens
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-bornebit-gradient text-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 relative">
-            <div className="absolute inset-0 border-4 border-bornebit-primary/20 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-bornebit-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <p className="text-bornebit-muted font-mono text-sm">INITIALIZING WORMHOLE...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#030014]">
+        <motion.div
+          className="relative"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+        >
+          <div className="w-16 h-16 border-[2px] border-bornebit-primary/20 border-t-bornebit-primary rounded-full" />
+          <div className="absolute inset-0 w-16 h-16 border-[2px] border-transparent border-b-bornebit-accent/40 rounded-full" style={{ animation: 'pulse-ring 2s ease-out infinite' }} />
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="mt-6 text-xs font-[family-name:'JetBrains_Mono',monospace] text-bornebit-primary/60 tracking-[0.3em]"
+        >
+          LOADING
+        </motion.p>
       </div>
     );
   }
-
-  // Not logged in → Login page
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
-  // Checking subscription
+  if (!isAuthenticated) return <Login />;
   if (subLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-bornebit-gradient text-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-bornebit-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-bornebit-muted text-sm">Checking access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Demo expired → show full subscription paywall
-  if (demoExpired) {
-    return (
-      <div className="relative">
-        {/* Blurred app behind the paywall */}
-        <div className="pointer-events-none select-none filter blur-sm opacity-30 fixed inset-0 overflow-hidden">
-          <div className="w-full h-full bg-bornebit-gradient" />
-        </div>
-        {/* Paywall overlay */}
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-bornebit-primary to-bornebit-accent rounded-2xl flex items-center justify-center shadow-2xl shadow-bornebit-primary/40">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-white">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-              </svg>
-            </div>
-            <h2 className="text-3xl font-extrabold text-white mb-2">Your Demo Has Ended</h2>
-            <p className="text-gray-400 text-sm max-w-sm mx-auto">You've experienced 10 minutes of Wormhole's live drone streaming platform. Subscribe to keep your access and unlock the full power of the system.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#030014] text-white gap-5">
+        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-bornebit-primary/20 to-bornebit-accent/10 border border-bornebit-primary/30 flex items-center justify-center">
+            <Zap className="text-bornebit-primary" size={24} />
           </div>
-          <PricingPlans onPlanSelected={(plan) => {
-            setDemoExpired(false);
-            setSubscription({ plan_id: plan.id, status: 'active', expires_at: '2099-12-31' });
-          }} />
-        </div>
+        </motion.div>
+        <p className="font-[family-name:'JetBrains_Mono',monospace] text-[11px] tracking-[0.3em] text-bornebit-primary/60">VERIFYING ACCESS</p>
       </div>
     );
   }
-
-  // No active subscription → Pricing page (but demo users get free starter access)
   if (!isSubscriptionActive(subscription) && !isDemo) {
     return <PricingPlans onPlanSelected={handlePlanSelected} />;
   }
 
-  // Inject a demo subscription so plan-gating works correctly in demo mode
-  const effectiveSubscription = isDemo && !subscription
-    ? { plan_id: 'starter', status: 'active', expires_at: '2099-12-31' }
-    : subscription;
-
-
-  // Determine plan tier for feature gating
-  const planId = effectiveSubscription?.plan_id || 'starter';
-  const hasRadar = planId === 'professional' || planId === 'enterprise' || planId === 'monthly' || planId === 'annual';
-  const hasHD = planId === 'professional' || planId === 'enterprise' || planId === 'monthly' || planId === 'annual';
-
   const navItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
-    { id: 'stream', name: 'Live Feeds', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
-    { id: 'telemetry', name: 'Telemetry', icon: 'M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6' },
-    { id: 'map', name: 'Map', icon: 'M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z' },
-    { id: 'weather', name: 'Weather', icon: 'M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z' },
-    { id: 'radar', name: 'Airspace', icon: 'M9.348 14.651a3.75 3.75 0 010-5.303m5.304 0a3.75 3.75 0 010 5.303m-7.425 2.122a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.79M12 12h.008v.007H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z' },
-    { id: 'team', name: 'Team', icon: 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z' },
-    { id: 'settings', name: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z' },
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, shortLabel: 'Dash' },
+    { id: 'stream', label: 'Live Stream', icon: <Video size={18} />, shortLabel: 'Live' },
+    { id: 'settings', label: 'Settings', icon: <Settings size={18} />, shortLabel: 'Config' },
   ];
 
-  // Render active tab content
+  const pageVariants = {
+    initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
+    in:      { opacity: 1, y: 0,  filter: 'blur(0px)' },
+    out:     { opacity: 0, y: -24, filter: 'blur(8px)' }
+  };
+  const pageTransition = { type: 'tween', ease: [0.25, 0.46, 0.45, 0.94], duration: 0.45 };
+
   const renderContent = () => {
+    const locationTelemetry = {
+      latitude: location.lat, longitude: location.lon,
+      altitude: 0, altitudeFt: 0, speed: 0, speedKnots: 0,
+      heading: 0, vSpeed: 0, distFromHome: 0,
+      battery: 100, signal: -45, satellites: 12,
+      droneModel: 'Computer Location'
+    };
+
     switch (activeTab) {
       case 'dashboard':
         return (
-          <div className="max-w-6xl mx-auto space-y-4">
-            <IndustryDashboard />
-            {/* Quick Status Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <DroneTelemetryOSD compact={true} onTelemetryUpdate={handleTelemetryUpdate} />
-              <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
-              <DroneMap compact={true} telemetry={liveTelemetry} flightPath={flightLog} />
-            </div>
-          </div>
-        );
-
-      case 'telemetry':
-        return (
-          <div className="max-w-6xl mx-auto space-y-4">
-            <DroneTelemetryOSD onTelemetryUpdate={handleTelemetryUpdate} />
-          </div>
-        );
-
-      case 'map':
-        return (
-          <div className="max-w-6xl mx-auto space-y-4">
-            <DroneMap telemetry={liveTelemetry} flightPath={flightLog} />
-            <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
-          </div>
-        );
-
-      case 'weather':
-        return (
-          <div className="max-w-4xl mx-auto">
-            <WeatherAdvisory latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
-          </div>
-        );
-
-      case 'radar':
-        return (
-          <div className="max-w-4xl mx-auto">
-            {hasRadar ? (
-              <DroneRadar />
-            ) : (
-              <div className="bg-bornebit-surface rounded-2xl border border-white/10 p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-bornebit-primary/10 rounded-full flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-bornebit-primary">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">Upgrade to Access Airspace Radar</h3>
-                <p className="text-bornebit-muted text-sm mb-4">Drone/Aircraft detection radar is available on Professional and Enterprise plans.</p>
-                <button
-                  onClick={() => setSubscription(null)}
-                  className="bg-gradient-to-r from-bornebit-primary to-bornebit-accent text-white font-bold py-2.5 px-6 rounded-xl text-sm hover:opacity-90 transition-all"
-                >
-                  Upgrade Plan
-                </button>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'team':
-        return (
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="bg-bornebit-surface rounded-xl border border-white/10 p-6">
-              <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-bornebit-primary">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                </svg>
-                Team Members
-              </h3>
-              <div className="mb-4 p-4 bg-black/30 rounded-xl border border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-bornebit-primary to-bornebit-accent flex items-center justify-center text-sm font-bold">
-                    {user?.email?.charAt(0) || 'U'}
+          <motion.div 
+            key="dashboard" variants={pageVariants}
+            initial="initial" animate="in" exit="out" transition={pageTransition}
+            className="w-full h-full flex flex-col xl:flex-row gap-6 p-4 md:p-6"
+          >
+            {/* Map Card */}
+            <ShimmerCard className="flex-1" borderColor="from-emerald-500 via-bornebit-primary to-amber-500">
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-bornebit-primary/20 border border-emerald-500/30 flex items-center justify-center">
+                    <MapPin className="text-emerald-400" size={18} />
                   </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-bold text-white">{user?.user_metadata?.username || user?.email?.split('@')[0]}</div>
-                    <div className="text-xs text-bornebit-muted">{user?.email}</div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Location Tracker</h2>
+                    <p className="text-[10px] text-gray-500 font-[family-name:'JetBrains_Mono',monospace] tracking-wider">REAL-TIME STREAMING SOURCE</p>
                   </div>
-                  <span className="text-[10px] bg-bornebit-primary/20 text-bornebit-primary px-2 py-0.5 rounded-full font-bold">ADMIN</span>
+                  <div className="ml-auto flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                    <span className="text-[9px] font-bold text-emerald-400 tracking-[0.15em] font-[family-name:'JetBrains_Mono',monospace]">TRACKING</span>
+                  </div>
                 </div>
-              </div>
+                <div className="rounded-2xl overflow-hidden min-h-[400px] border border-white/5">
+                  <DroneMap telemetry={locationTelemetry} flightPath={flightPath} />
+                </div>
+                {/* Location stats bar */}
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {[
+                    { icon: <Compass size={14} />, label: 'LAT', value: <AnimatedNumber value={location.lat} /> },
+                    { icon: <Globe size={14} />, label: 'LON', value: <AnimatedNumber value={location.lon} /> },
+                    { icon: <Activity size={14} />, label: 'STATUS', value: 'LIVE' },
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + i * 0.1 }}
+                      className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/[0.05] transition-colors duration-300"
+                    >
+                      <div className="text-bornebit-primary/70">{stat.icon}</div>
+                      <div>
+                        <div className="text-[8px] uppercase text-gray-600 font-bold tracking-[0.2em] font-[family-name:'JetBrains_Mono',monospace]">{stat.label}</div>
+                        <div className="text-sm font-[family-name:'JetBrains_Mono',monospace] text-white">{stat.value}</div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
 
-              {/* Invite Team */}
-              <div className="bg-gradient-to-r from-bornebit-primary/5 to-bornebit-accent/5 rounded-xl border border-bornebit-primary/20 p-4">
-                <h4 className="text-sm font-semibold text-white mb-2">Invite Team Members</h4>
-                <p className="text-xs text-gray-400 mb-3">
-                  {planId === 'starter' ? 'Up to 3 members on Starter plan' : planId === 'professional' ? 'Up to 15 members on Professional plan' : 'Unlimited members on Enterprise plan'}
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    placeholder="colleague@company.com"
-                    className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-bornebit-primary focus:outline-none"
-                  />
-                  <button className="bg-bornebit-primary/20 hover:bg-bornebit-primary/30 border border-bornebit-primary/30 text-bornebit-primary text-sm px-4 py-2.5 rounded-xl transition-all font-semibold">
-                    Invite
-                  </button>
-                </div>
-                <p className="text-[10px] text-gray-600 mt-2">⚡ Team invites will be enabled once backend is deployed</p>
-              </div>
-            </div>
+                {/* GPS Data Update Control Panel */}
+                <div className="mt-4 bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Navigation size={14} className="text-emerald-400" />
+                      <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wider font-[family-name:'JetBrains_Mono',monospace]">
+                        GPS Location Presets & Telemetry Override
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleDeviceGps}
+                      className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 rounded-lg text-[10px] font-bold text-emerald-400 transition-all font-[family-name:'JetBrains_Mono',monospace]"
+                    >
+                      <Crosshair size={12} />
+                      DETECT MY GPS
+                    </button>
+                  </div>
 
-            {/* Organization Info */}
-            <div className="bg-bornebit-surface rounded-xl border border-white/10 p-6">
-              <h3 className="font-bold text-white mb-4">Organization</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-white/5">
-                  <span className="text-sm text-gray-400">Name</span>
-                  <span className="text-sm font-mono text-white">{orgData.name || 'Not set'}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-white/5">
-                  <span className="text-sm text-gray-400">Industry</span>
-                  <span className="text-sm text-white">{industryConfig.icon} {industryConfig.name}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-white/5">
-                  <span className="text-sm text-gray-400">Plan</span>
-                  <span className="text-sm font-bold text-bornebit-primary capitalize">{planId.replace('_', ' ')}</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-gray-400">Created</span>
-                  <span className="text-sm font-mono text-gray-500">{orgData.created ? new Date(orgData.created).toLocaleDateString() : '—'}</span>
+                  {/* Preset Pills */}
+                  <div className="flex flex-wrap gap-2">
+                    {GPS_PRESETS.map((preset) => (
+                      <button
+                        key={preset.name}
+                        onClick={() => updateGpsCoordinates(preset.lat, preset.lon)}
+                        className={`text-[10px] font-bold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 font-[family-name:'JetBrains_Mono',monospace] ${
+                          Math.abs(location.lat - preset.lat) < 0.01 && Math.abs(location.lon - preset.lon) < 0.01
+                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-sm shadow-emerald-500/20'
+                            : 'bg-white/[0.03] border-white/[0.08] text-gray-400 hover:text-white hover:bg-white/[0.06]'
+                        }`}
+                      >
+                        <span>{preset.flag}</span>
+                        <span>{preset.name}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Manual Coordinates Input */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      updateGpsCoordinates(inputLat, inputLon);
+                    }}
+                    className="flex flex-wrap md:flex-nowrap items-center gap-2 pt-1"
+                  >
+                    <div className="flex-1 flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2">
+                      <span className="text-[10px] font-bold text-gray-500 font-[family-name:'JetBrains_Mono',monospace]">LAT:</span>
+                      <input
+                        type="number"
+                        step="any"
+                        value={inputLat}
+                        onChange={(e) => setInputLat(e.target.value)}
+                        placeholder="e.g. 6.5244"
+                        className="w-full bg-transparent text-xs text-white font-[family-name:'JetBrains_Mono',monospace] focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex-1 flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2">
+                      <span className="text-[10px] font-bold text-gray-500 font-[family-name:'JetBrains_Mono',monospace]">LON:</span>
+                      <input
+                        type="number"
+                        step="any"
+                        value={inputLon}
+                        onChange={(e) => setInputLon(e.target.value)}
+                        placeholder="e.g. 3.3792"
+                        className="w-full bg-transparent text-xs text-white font-[family-name:'JetBrains_Mono',monospace] focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all font-[family-name:'JetBrains_Mono',monospace] flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    >
+                      <Edit3 size={12} />
+                      UPDATE MAP
+                    </button>
+                  </form>
                 </div>
               </div>
-            </div>
-          </div>
+            </ShimmerCard>
+            
+            {/* Weather Card */}
+            <ShimmerCard className="xl:w-[440px]" borderColor="from-blue-500 via-cyan-400 to-purple-500">
+              <div className="p-6 flex flex-col h-full">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center">
+                    <CloudSun className="text-blue-400" size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Weather Intel</h2>
+                    <p className="text-[10px] text-gray-500 font-[family-name:'JetBrains_Mono',monospace] tracking-wider">FLIGHT SAFETY & CONDITIONS</p>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <WeatherAdvisory latitude={location.lat} longitude={location.lon} />
+                </div>
+              </div>
+            </ShimmerCard>
+          </motion.div>
+        );
+
+      case 'stream':
+        return (
+          <motion.div 
+            key="stream" variants={pageVariants}
+            initial="initial" animate="in" exit="out" transition={pageTransition}
+            className="w-full max-w-7xl mx-auto p-4 md:p-6 flex flex-col gap-6"
+          >
+            <ShimmerCard borderColor="from-red-500 via-bornebit-primary to-amber-500">
+              <div className="relative">
+                <div className="aspect-video w-full">
+                  <VideoPlayer key={streamUrl} src={streamUrl} options={playerOptions} />
+                </div>
+                {/* Floating HUD badges */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
+                  <motion.div 
+                    initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-black/70 backdrop-blur-md px-4 py-2 rounded-xl border border-red-500/30 flex items-center gap-2.5"
+                  >
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                    </span>
+                    <span className="text-[10px] font-black text-white tracking-[0.2em] font-[family-name:'JetBrains_Mono',monospace]">LIVE</span>
+                  </motion.div>
+                </div>
+                <div className="absolute top-4 right-4 pointer-events-none">
+                  <motion.div 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2"
+                  >
+                    <Radio size={10} className="text-green-400" />
+                    <span className="text-[9px] font-[family-name:'JetBrains_Mono',monospace] text-green-400 font-bold tracking-[0.1em]">CONNECTED</span>
+                  </motion.div>
+                </div>
+              </div>
+            </ShimmerCard>
+          </motion.div>
         );
 
       case 'settings':
         return (
-          <div className="max-w-2xl mx-auto space-y-4">
-            <div className="bg-bornebit-surface rounded-lg border border-white/10 p-6">
-              <h3 className="font-bold text-white mb-4">Stream Configuration</h3>
-              <div className="space-y-4">
+          <motion.div 
+            key="settings" variants={pageVariants}
+            initial="initial" animate="in" exit="out" transition={pageTransition}
+            className="w-full max-w-3xl mx-auto p-4 md:p-6 space-y-6"
+          >
+            {/* Stream Configuration Card */}
+            <ShimmerCard borderColor="from-bornebit-primary via-amber-500 to-bornebit-primary">
+              <div className="p-8 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-bornebit-primary/20 to-amber-500/20 border border-bornebit-primary/30 flex items-center justify-center">
+                    <Zap className="text-bornebit-primary" size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Stream Configuration</h2>
+                    <p className="text-gray-500 text-xs font-[family-name:'JetBrains_Mono',monospace] tracking-wider">MANAGE HLS SERVER & STREAM KEY</p>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 block mb-2 uppercase tracking-[0.2em] font-[family-name:'JetBrains_Mono',monospace]">HLS Server URL</label>
+                    <input
+                      type="text"
+                      value={hlsServer}
+                      onChange={(e) => handleServerChange(e.target.value)}
+                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-bornebit-primary/50 focus:ring-2 focus:ring-bornebit-primary/15 focus:bg-white/[0.05] transition-all duration-300 font-[family-name:'JetBrains_Mono',monospace] text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 block mb-2 uppercase tracking-[0.2em] font-[family-name:'JetBrains_Mono',monospace]">Stream Key</label>
+                    <input
+                      type="text"
+                      value={streamKey}
+                      onChange={(e) => handleKeyChange(e.target.value)}
+                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-bornebit-primary/50 focus:ring-2 focus:ring-bornebit-primary/15 focus:bg-white/[0.05] transition-all duration-300 font-[family-name:'JetBrains_Mono',monospace] text-sm"
+                    />
+                  </div>
+                  <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.06] flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[9px] uppercase text-gray-600 font-bold tracking-[0.2em] mb-1.5 font-[family-name:'JetBrains_Mono',monospace]">Active Stream URL</div>
+                      <div className="text-xs font-[family-name:'JetBrains_Mono',monospace] text-bornebit-primary/80 truncate">{streamUrl}</div>
+                    </div>
+                    <motion.button 
+                      onClick={handleCopy}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-2 bg-bornebit-primary/10 hover:bg-bornebit-primary/20 border border-bornebit-primary/20 text-bornebit-primary px-4 py-2.5 rounded-xl transition-all text-xs font-bold shrink-0"
+                    >
+                      {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </ShimmerCard>
+
+            {/* Share Stream QR Code Card */}
+            <ShimmerCard borderColor="from-cyan-500 via-blue-500 to-purple-500">
+              <div className="p-8 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
+                    <QrCode className="text-cyan-400" size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Share Stream</h2>
+                    <p className="text-gray-500 text-xs font-[family-name:'JetBrains_Mono',monospace] tracking-wider">SCAN TO WATCH LIVE</p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1.5 rounded-full">
+                    <Share2 size={10} className="text-cyan-400" />
+                    <span className="text-[9px] font-bold text-cyan-400 tracking-[0.15em] font-[family-name:'JetBrains_Mono',monospace]">PUBLIC</span>
+                  </div>
+                </div>
+
+                {/* Public Tunnel URL Input */}
                 <div>
-                  <label className="text-xs text-bornebit-muted uppercase tracking-wider block mb-2">HLS Server URL</label>
+                  <label className="text-[10px] font-bold text-gray-500 block mb-2 uppercase tracking-[0.2em] font-[family-name:'JetBrains_Mono',monospace]">Public Tunnel URL</label>
                   <input
                     type="text"
-                    value={hlsServer}
-                    onChange={(e) => handleServerChange(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-bornebit-primary focus:outline-none font-mono text-bornebit-primary"
+                    value={publicTunnelUrl}
+                    onChange={(e) => handlePublicUrlChange(e.target.value)}
+                    placeholder="https://xxx.trycloudflare.com"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/15 focus:bg-white/[0.05] transition-all duration-300 font-[family-name:'JetBrains_Mono',monospace] text-sm placeholder:text-gray-700"
                   />
-                </div>
-                <div>
-                  <label className="text-xs text-bornebit-muted uppercase tracking-wider block mb-2">Stream Key</label>
-                  <input
-                    type="text"
-                    value={streamKey}
-                    onChange={(e) => handleKeyChange(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-bornebit-primary focus:outline-none font-mono text-bornebit-primary"
-                  />
-                </div>
-                <div className="bg-black/30 rounded-lg p-3">
-                  <div className="text-xs text-bornebit-muted mb-1">Stream URL:</div>
-                  <div className="text-xs font-mono text-bornebit-primary break-all">{streamUrl}</div>
-                </div>
-                <button onClick={copyVlcLink} className="w-full bg-bornebit-primary/20 hover:bg-bornebit-primary/30 border border-bornebit-primary/30 text-bornebit-primary text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-                  📋 Copy VLC Link
-                </button>
-              </div>
-            </div>
-
-            {/* Subscription Info */}
-            <div className="bg-bornebit-surface rounded-lg border border-white/10 p-6">
-              <h3 className="font-bold text-white mb-4">Subscription</h3>
-              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg">
-                <div>
-                  <div className="text-sm font-bold text-white capitalize">{planId.replace('_', ' ')} Plan</div>
-                  <div className="text-xs text-bornebit-muted">Active • {subscription?.expires_at ? `Expires ${new Date(subscription.expires_at).toLocaleDateString()}` : 'No expiry'}</div>
-                </div>
-                <div className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full font-bold uppercase">Active</div>
-              </div>
-              <button
-                onClick={() => setSubscription(null)}
-                className="mt-3 w-full bg-white/5 border border-white/10 text-gray-400 text-sm py-2.5 rounded-xl hover:bg-white/10 transition-all"
-              >
-                Change Plan
-              </button>
-            </div>
-
-            {/* Account */}
-            <div className="bg-bornebit-surface rounded-lg border border-white/10 p-6">
-              <h3 className="font-bold text-white mb-4">Account</h3>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-bornebit-primary to-bornebit-accent flex items-center justify-center text-lg font-bold">
-                  {user?.email?.charAt(0) || 'U'}
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white">{user?.user_metadata?.username || user?.email?.split('@')[0]}</div>
-                  <div className="text-xs text-bornebit-muted">{user?.email}</div>
-                </div>
-              </div>
-              <button
-                onClick={signOut}
-                className="w-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm py-2.5 rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                </svg>
-                Sign Out
-              </button>
-            </div>
-          </div>
-        );
-
-      default: // 'stream'
-        return (
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-            {/* Player Container */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="aspect-video w-full bg-black rounded-lg md:rounded-xl overflow-hidden border border-white/10 shadow-2xl relative group">
-                <VideoPlayer
-                  key={streamUrl}
-                  src={streamUrl}
-                  options={playerOptions}
-                  onReady={(player) => {
-                    console.log("Wormhole Player Ready", player);
-                    player.on('error', () => {
-                      console.error("Video Player Error:", player.error());
-                    });
-                  }}
-                />
-                {/* HUD Overlay */}
-                <div className="absolute top-2 md:top-4 left-2 md:left-4 flex flex-col gap-1 pointer-events-none">
-                  <div className="text-[10px] md:text-xs font-mono text-bornebit-primary bg-black/60 px-2 py-0.5 rounded flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
-                    LIVE
-                  </div>
-                  <div className="text-[10px] md:text-xs font-mono text-white bg-black/60 px-2 py-0.5 rounded">
-                    {hasHD ? 'HD 1080p' : 'SD 480p'}
-                  </div>
-                  <div className="text-[10px] font-mono bg-black/60 px-2 py-0.5 rounded flex items-center gap-1">
-                    <span>{industryConfig.icon}</span>
-                    <span className={industryConfig.color}>{industryConfig.name}</span>
-                  </div>
-                </div>
-                <div className="absolute top-2 md:top-4 right-2 md:right-4 pointer-events-none">
-                  <div className="text-[10px] md:text-xs font-mono text-green-400 bg-black/60 px-2 py-0.5 rounded flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-                    CONNECTED
-                  </div>
-                </div>
-              </div>
-
-              {/* Info Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-bornebit-surface p-4 rounded-lg border border-white/10">
-                  <h2 className="text-lg md:text-xl font-bold text-white mb-1">{orgData.name || 'Live Stream'}</h2>
-                  <p className="text-xs text-bornebit-muted mb-3">{industryConfig.icon} {industryConfig.name} — Active drone deployment</p>
-                  <div className="space-y-2 font-mono text-xs">
-                    {[
-                      { label: 'COORDINATES', value: liveTelemetry ? `${liveTelemetry.latitude.toFixed(4)}° N, ${liveTelemetry.longitude.toFixed(4)}° E` : '6.5244° N, 3.3792° E' },
-                      { label: 'ALTITUDE', value: liveTelemetry ? `${liveTelemetry.altitudeFt.toFixed(0)} FT` : '— FT' },
-                      { label: 'VELOCITY', value: liveTelemetry ? `${liveTelemetry.speedKnots.toFixed(1)} KNOTS` : '— KNOTS' },
-                      { label: 'HEADING', value: liveTelemetry ? `${liveTelemetry.heading.toFixed(0)}°` : '—°' },
-                      { label: 'V/SPEED', value: liveTelemetry ? `${liveTelemetry.vSpeed > 0 ? '+' : ''}${liveTelemetry.vSpeed.toFixed(1)} M/S` : '— M/S' },
-                    ].map(item => (
-                      <div key={item.label} className="flex justify-between border-b border-white/5 pb-1">
-                        <span className="text-bornebit-muted">{item.label}</span>
-                        <span className="text-bornebit-accent">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-[9px] text-gray-600 mt-2 font-[family-name:'JetBrains_Mono',monospace]">
+                    Paste the Cloudflare tunnel URL from <span className="text-cyan-400/70">deploy-demo.bat</span> output
+                  </p>
                 </div>
 
-                {/* Compact Map or Radar */}
-                {hasRadar ? (
-                  <DroneMap compact={true} telemetry={liveTelemetry} flightPath={flightLog} />
-                ) : !isMobile ? (
-                  <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
-                ) : null}
-              </div>
-            </div>
-
-            {/* Side Panel */}
-            <div className="bg-bornebit-surface rounded-lg border border-white/10 p-4 flex flex-col gap-4">
-              <h3 className="font-bold text-bornebit-primary border-b border-white/5 pb-2 uppercase tracking-wide text-sm">Live Telemetry</h3>
-              <div className="space-y-4">
-                {[
-                  { label: 'Battery', value: liveTelemetry ? `${liveTelemetry.battery.toFixed(0)}%` : '—%', color: liveTelemetry && liveTelemetry.battery < 20 ? 'bg-red-500' : 'bg-green-500', barWidth: liveTelemetry ? `${liveTelemetry.battery}%` : '0%' },
-                  { label: 'Signal', value: liveTelemetry ? `${liveTelemetry.signal.toFixed(0)} dBm` : '— dBm', color: liveTelemetry && liveTelemetry.signal < -90 ? 'bg-red-500' : 'bg-green-500', barWidth: liveTelemetry ? `${Math.max(0, Math.min(100, (liveTelemetry.signal + 120) / 0.8))}%` : '0%' },
-                  { label: 'Speed', value: liveTelemetry ? `${liveTelemetry.speed.toFixed(1)} km/h` : '— km/h', color: 'bg-bornebit-primary', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.speed / 75) * 100)}%` : '0%' },
-                  { label: 'Wind', value: liveTelemetry ? `${liveTelemetry.windSpeed.toFixed(0)} km/h` : '— km/h', color: liveTelemetry && liveTelemetry.windSpeed > 30 ? 'bg-red-500' : 'bg-yellow-500', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.windSpeed / 50) * 100)}%` : '0%' },
-                  { label: 'Altitude', value: liveTelemetry ? `${liveTelemetry.altitude.toFixed(1)} m` : '— m', color: 'bg-cyan-500', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.altitude / 200) * 100)}%` : '0%' },
-                  { label: 'GPS Sats', value: liveTelemetry ? `${liveTelemetry.satellites}` : '—', color: liveTelemetry && liveTelemetry.satellites < 6 ? 'bg-yellow-500' : 'bg-green-500', barWidth: liveTelemetry ? `${Math.min(100, (liveTelemetry.satellites / 18) * 100)}%` : '0%' },
-                ].map(stat => (
-                  <div key={stat.label} className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400 text-xs md:text-sm">{stat.label}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-sm">{stat.value}</span>
-                        <div className={`w-2 h-2 rounded-full ${stat.color}`}></div>
-                      </div>
+                {qrCodeUrl ? (
+                  <StreamQRCode url={qrCodeUrl} label="Scan to Watch on Wormhole App" />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-white/[0.06] flex items-center justify-center">
+                      <QrCode className="text-gray-600" size={24} />
                     </div>
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className={`h-full ${stat.color} rounded-full transition-all duration-1000`} style={{ width: stat.barWidth }}></div>
-                    </div>
+                    <p className="text-[11px] text-gray-600 font-[family-name:'JetBrains_Mono',monospace] font-bold">NO PUBLIC URL SET</p>
+                    <p className="text-[9px] text-gray-700 font-[family-name:'JetBrains_Mono',monospace] text-center max-w-[260px] leading-relaxed">
+                      Enter your Cloudflare tunnel URL above to generate a QR code that viewers can scan.
+                    </p>
                   </div>
-                ))}
-              </div>
+                )}
 
-              {/* VLC Quick Access */}
-              <div className="bg-gradient-to-br from-bornebit-primary/10 to-bornebit-accent/10 border border-bornebit-primary/20 rounded-lg p-3 mt-2">
-                <div className="text-xs font-bold text-bornebit-primary uppercase tracking-wider mb-2">📡 Stream Link</div>
-                <div className="font-mono text-[10px] text-bornebit-accent break-all mb-2">{streamUrl}</div>
-                <button onClick={copyVlcLink} className="w-full bg-bornebit-primary/20 hover:bg-bornebit-primary/30 border border-bornebit-primary/30 text-bornebit-primary text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-2">
-                  📋 Copy for VLC
-                </button>
-              </div>
-
-              {/* Compact Weather */}
-              <WeatherAdvisory compact={true} latitude={liveTelemetry?.latitude} longitude={liveTelemetry?.longitude} />
-
-              {/* Plan Badge */}
-              <div className="bg-black/40 rounded-lg p-3 flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] text-gray-500 uppercase">Plan</div>
-                  <div className="text-sm font-bold text-white capitalize">{planId.replace('_', ' ')}</div>
+                <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.06]">
+                  <p className="text-[9px] text-gray-600 font-[family-name:'JetBrains_Mono',monospace] leading-relaxed">
+                    <span className="text-cyan-400/70 font-bold">💡 TIP:</span> Run <span className="text-cyan-400/60">deploy-demo.bat</span> to start a Cloudflare tunnel. Copy the <span className="text-cyan-400/60">trycloudflare.com</span> URL and paste it above. The QR code updates instantly — viewers scan it to watch your live stream on any device.
+                  </p>
                 </div>
-                <div className="bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded-full font-bold">ACTIVE</div>
               </div>
+            </ShimmerCard>
 
-              {/* Org Badge */}
-              {orgData.name && (
-                <div className="bg-black/40 rounded-lg p-3 flex items-center gap-2">
-                  <span className="text-lg">{industryConfig.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-white truncate">{orgData.name}</div>
-                    <div className="text-[10px] text-gray-500">{industryConfig.name}</div>
+            {/* Account Card */}
+            <ShimmerCard borderColor="from-purple-500 via-pink-500 to-bornebit-primary">
+              <div className="p-8">
+                <div className="flex flex-col items-center text-center">
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="w-20 h-20 rounded-2xl bg-gradient-to-br from-bornebit-primary to-bornebit-accent flex items-center justify-center text-2xl font-black text-white mb-5 shadow-xl shadow-bornebit-primary/30 relative overflow-hidden"
+                  >
+                    {/* Shine sweep on avatar */}
+                    <div className="absolute inset-0" style={{
+                      background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)',
+                      animation: 'shine-sweep 4s ease-in-out infinite',
+                    }} />
+                    <span className="relative z-10">{user?.email?.charAt(0).toUpperCase() || 'U'}</span>
+                  </motion.div>
+                  <h3 className="text-lg font-bold text-white">{user?.user_metadata?.username || user?.email?.split('@')[0]}</h3>
+                  <p className="text-sm text-gray-500 mt-1 font-[family-name:'JetBrains_Mono',monospace]">{user?.email}</p>
+                  <div className="mt-3 inline-flex items-center gap-2 bg-bornebit-primary/10 border border-bornebit-primary/20 px-4 py-1.5 rounded-full">
+                    <Sparkles size={12} className="text-bornebit-primary" />
+                    <span className="text-[10px] font-bold text-bornebit-primary tracking-[0.15em] font-[family-name:'JetBrains_Mono',monospace]">{isDemo ? 'PRO VERSION' : (subscription?.plan_id || 'STARTER').toUpperCase()}</span>
                   </div>
-                </div>
-              )}
-
-              <div className="mt-auto bg-black/40 rounded-lg p-3">
-                <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider">Console</div>
-                <div className="font-mono text-[10px] space-y-1 text-green-400 opacity-80 h-20 overflow-hidden">
-                  <p>&gt; Connection established</p>
-                  <p>&gt; Stream: {streamKey} @ {hasHD ? '1080p' : '480p'}</p>
-                  <p>&gt; Industry: {industryConfig.name}</p>
-                  {liveTelemetry && <p>&gt; Telemetry: {liveTelemetry.droneModel} @ {liveTelemetry.altitude.toFixed(1)}m</p>}
-                  {liveTelemetry && <p>&gt; GPS: {liveTelemetry.latitude.toFixed(6)}, {liveTelemetry.longitude.toFixed(6)}</p>}
-                  <p className="animate-pulse">&gt; _</p>
+                  
+                  <motion.button 
+                    onClick={signOut}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="mt-8 flex items-center gap-2 px-8 py-3 rounded-2xl border border-red-500/20 text-red-400/80 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-400 font-bold transition-all duration-300 text-sm"
+                  >
+                    <LogOut size={16} /> Sign Out
+                  </motion.button>
                 </div>
               </div>
-            </div>
-          </div>
+            </ShimmerCard>
+          </motion.div>
         );
+      default: return null;
     }
   };
 
   return (
-    <div className="flex h-screen w-full bg-bornebit-gradient text-white overflow-hidden font-sans relative">
-      {/* Globe Background - Desktop only */}
-      {!isMobile && activeTab === 'stream' && <Globe isBackground={true} />}
+    <div className="flex h-screen w-full bg-[#030014] text-white overflow-hidden font-sans relative selection:bg-bornebit-primary/30">
+      {/* Animated Background */}
+      <Particles />
+      <GlowOrb color="rgba(255,87,34,0.06)" size="600px" top="-200px" left="10%" delay={0} />
+      <GlowOrb color="rgba(59,130,246,0.04)" size="500px" top="60%" left="70%" delay={3} />
+      <GlowOrb color="rgba(139,92,246,0.035)" size="400px" top="80%" left="20%" delay={6} />
 
-      {/* Mobile Sidebar Overlay */}
-      {isMobile && isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/70 z-40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-      )}
-
-      {/* Demo Countdown HUD */}
-      {isDemo && !demoExpired && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-sm shadow-lg transition-all ${
-          demoSecondsLeft < 120
-            ? 'bg-red-500/20 border-red-500/50 text-red-300 animate-pulse'
-            : 'bg-black/60 border-amber-500/40 text-amber-400'
-        }`}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 shrink-0">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <div className="text-[10px] uppercase tracking-wider font-mono opacity-70">Demo</div>
-            <div className="text-sm font-bold font-mono leading-none">{fmtTime(demoSecondsLeft)}</div>
-          </div>
-          <button
-            onClick={() => setSubscription(null)}
-            className="ml-1 text-[10px] bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 px-2 py-1 rounded-lg font-semibold text-amber-300 transition-all"
+      {/* Glass Sidebar */}
+      <aside className="relative z-20 w-20 md:w-72 h-full flex-shrink-0 flex flex-col items-center md:items-stretch py-6 md:py-8 px-2 md:px-5 border-r border-white/[0.04] bg-[#060616]/80 backdrop-blur-3xl">
+        <SidebarSpotlight activeTab={activeTab} />
+        
+        {/* Brand */}
+        <div className="flex items-center gap-3 mb-10 md:px-2 shrink-0 justify-center md:justify-start relative z-10">
+          <motion.div 
+            whileHover={{ rotate: 10, scale: 1.1 }}
+            className="w-11 h-11 rounded-2xl bg-gradient-to-br from-bornebit-primary to-bornebit-accent shadow-lg shadow-bornebit-primary/30 flex items-center justify-center text-white font-black text-xl relative overflow-hidden"
           >
-            Upgrade
-          </button>
-        </div>
-      )}
-
-      {/* Sidebar */}
-      <aside className={`
-        ${isMobile
-          ? `fixed top-0 left-0 h-full w-72 z-50 transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
-          : 'w-72 relative z-20'
-        }
-        bg-bornebit-surface border-r border-white/5 flex flex-col
-      `}>
-        <div className="p-4 flex items-center justify-between border-b border-white/5 bg-black/20">
-          <div>
-            <div className="font-extrabold text-2xl tracking-tighter text-bornebit-primary">WORMHOLE</div>
-            <div className="text-[9px] text-gray-500 uppercase tracking-widest -mt-0.5">Multi-Industry SaaS</div>
+            <div className="absolute inset-0" style={{
+              background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)',
+              animation: 'shine-sweep 3s ease-in-out infinite',
+            }} />
+            <span className="relative z-10">W</span>
+          </motion.div>
+          <div className="hidden md:block">
+            <span className="text-lg font-black tracking-tight text-white">WORMHOLE</span>
+            <span className="block text-[8px] text-gray-600 font-[family-name:'JetBrains_Mono',monospace] tracking-[0.2em] -mt-0.5">STREAM PLATFORM</span>
           </div>
-          {isMobile && (
-            <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-white/10 rounded-lg text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          )}
         </div>
 
-        {/* User Profile */}
-        <div className="p-4 border-b border-white/5 bg-black/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-bornebit-primary to-bornebit-accent flex items-center justify-center text-sm font-bold uppercase shadow-lg shadow-bornebit-primary/30">
-              {user?.email?.charAt(0) || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate">{user?.user_metadata?.username || user?.email?.split('@')[0] || 'Operator'}</div>
-              <div className="text-[10px] text-bornebit-primary font-mono uppercase">{planId.replace('_', ' ')} Plan</div>
-            </div>
-          </div>
-          {orgData.name && (
-            <div className="mt-2 flex items-center gap-2 bg-black/30 rounded-lg px-2 py-1.5">
-              <span className="text-sm">{industryConfig.icon}</span>
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-semibold text-white truncate">{orgData.name}</div>
-                <div className="text-[9px] text-gray-500">{industryConfig.name}</div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => (
-            <a
+        {/* Nav */}
+        <nav className="flex-1 flex flex-col gap-1.5 relative z-10">
+          {navItems.map(item => (
+            <motion.button
               key={item.id}
-              href="#"
-              onClick={(e) => { e.preventDefault(); setActiveTab(item.id); if (isMobile) setIsSidebarOpen(false); }}
-              className={`flex items-center gap-4 p-3 rounded-lg transition-all ${activeTab === item.id
-                ? 'bg-bornebit-primary text-white shadow-lg shadow-bornebit-primary/25'
-                : 'hover:bg-white/5 text-gray-300'
-                }`}
+              onClick={() => setActiveTab(item.id)}
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.97 }}
+              className={`flex items-center justify-center md:justify-start gap-4 p-3.5 md:p-4 rounded-2xl transition-colors duration-300 relative
+                ${activeTab === item.id ? 'text-white' : 'text-gray-600 hover:text-gray-300'}
+              `}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-              </svg>
-              <span className="font-semibold text-sm">{item.name}</span>
-              {item.id === 'radar' && !hasRadar && (
-                <span className="ml-auto text-[9px] bg-bornebit-primary/20 text-bornebit-primary px-1.5 py-0.5 rounded">PRO</span>
+              <div className={`relative z-10 transition-all duration-300 ${activeTab === item.id ? 'text-bornebit-primary' : ''}`}>
+                {item.icon}
+              </div>
+              <span className="hidden md:block font-semibold text-sm tracking-wide z-10 relative">
+                {item.label}
+              </span>
+              {activeTab === item.id && (
+                <motion.div 
+                  layoutId="active-tab-bg"
+                  className="absolute inset-0 bg-gradient-to-r from-bornebit-primary/[0.12] to-transparent border border-bornebit-primary/15 rounded-2xl"
+                  style={{ boxShadow: '0 0 30px rgba(255,87,34,0.08), inset 0 1px 0 rgba(255,255,255,0.03)' }}
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                />
               )}
-            </a>
+            </motion.button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5 bg-black/20 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div>
-            <div>
-              <div className="text-xs text-green-500 font-mono">OPERATIONAL</div>
+        {/* Status */}
+        <div className="mt-auto flex flex-col items-center md:items-stretch md:px-1 gap-3 relative z-10">
+          <div className="flex items-center gap-3 justify-center md:justify-start bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3.5">
+            <div className="relative">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(52,211,153,0.7)]" />
+              <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping opacity-40" />
             </div>
+            <span className="hidden md:block font-[family-name:'JetBrains_Mono',monospace] text-[10px] text-emerald-400/80 font-bold tracking-[0.15em]">SYSTEM ONLINE</span>
           </div>
-          <button onClick={signOut} className="w-full flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-lg py-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 text-sm transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
-            Sign Out
-          </button>
+          <div className="hidden md:flex items-center gap-2 justify-center text-[9px] text-gray-700 font-[family-name:'JetBrains_Mono',monospace]">
+            <span>v2.0.0</span>
+            <span>•</span>
+            <span>Wormhole™</span>
+          </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col relative overflow-hidden bg-bornebit-bg">
-        <header className="h-14 md:h-16 border-b border-white/5 bg-bornebit-surface/80 backdrop-blur flex items-center justify-between px-4 md:px-6 z-10 shrink-0">
-          <div className="flex items-center gap-3">
-            {isMobile && (
-              <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 hover:bg-white/10 rounded-lg text-bornebit-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
-              </button>
-            )}
-            <h1 className="text-base md:text-xl font-bold uppercase tracking-wider text-white">
-              {navItems.find(i => i.id === activeTab)?.name || 'Dashboard'}
-            </h1>
-            <span className="bg-bornebit-primary/20 text-bornebit-primary text-[10px] px-2 py-0.5 rounded border border-bornebit-primary/30 uppercase font-mono">{planId.replace('_', ' ')}</span>
-            {orgData.name && (
-              <span className="hidden md:inline-flex items-center gap-1 text-[10px] bg-white/5 border border-white/10 rounded px-2 py-0.5 text-gray-500">
-                {industryConfig.icon} {orgData.name}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {!isMobile && activeTab === 'stream' && (
-              <>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-bornebit-muted">Server:</span>
-                  <input type="text" value={hlsServer} onChange={(e) => handleServerChange(e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1 text-xs focus:border-bornebit-primary focus:outline-none w-48 font-mono text-bornebit-primary" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-bornebit-muted">Key:</span>
-                  <input type="text" value={streamKey} onChange={(e) => handleKeyChange(e.target.value)} className="bg-black/40 border border-white/10 rounded px-2 py-1 text-xs focus:border-bornebit-primary focus:outline-none w-20 font-mono text-bornebit-primary" />
-                </div>
-              </>
-            )}
-            <button onClick={copyVlcLink} className="p-2 hover:bg-white/10 rounded-lg text-bornebit-primary" title="Copy VLC Link">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.813a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364l1.757 1.757" /></svg>
-            </button>
-          </div>
-        </header>
-
-        <div className={`flex-1 overflow-y-auto p-3 md:p-6 scroll-smooth ${isMobile ? 'pb-20' : ''}`}>
+      <main className="flex-1 relative z-10 overflow-y-auto overflow-x-hidden">
+        <AnimatePresence mode="wait">
           {renderContent()}
-        </div>
-
-        {/* Mobile Bottom Nav */}
-        {isMobile && (
-          <nav className="fixed bottom-0 left-0 right-0 bg-bornebit-surface/95 backdrop-blur-lg border-t border-white/10 flex items-center justify-around py-2 px-2 z-30 safe-area-bottom">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-all ${activeTab === item.id ? 'text-bornebit-primary' : 'text-gray-500'
-                  }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={activeTab === item.id ? 2 : 1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                </svg>
-                <span className="text-[10px] font-medium">{item.name}</span>
-                {activeTab === item.id && <div className="w-1 h-1 rounded-full bg-bornebit-primary"></div>}
-              </button>
-            ))}
-          </nav>
-        )}
+        </AnimatePresence>
       </main>
     </div>
-  )
+  );
 }
 
-export default App
-
-
+export default App;

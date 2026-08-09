@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase, signIn, signUp, signOut, signInWithGoogle, signInWithGitHub } from '../lib/supabase';
 
 const AuthContext = createContext(null);
@@ -17,13 +17,17 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const [isDemo, setIsDemo] = useState(false);
     const [demoStartTime, setDemoStartTime] = useState(null);
+    const isDemoRef = useRef(false); // ref so the listener can check demo mode synchronously
 
     useEffect(() => {
         // Check active session on mount
         const checkSession = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                setUser(session?.user ?? null);
+                // Only set user from Supabase if we're NOT in demo mode
+                if (!isDemoRef.current) {
+                    setUser(session?.user ?? null);
+                }
             } catch (err) {
                 console.error('Session check error:', err);
             } finally {
@@ -33,9 +37,16 @@ export const AuthProvider = ({ children }) => {
 
         checkSession();
 
-        // Listen for auth changes
+        // Listen for auth changes — but SKIP when in demo mode
+        // Without this guard, Supabase fires onAuthStateChange with session=null
+        // immediately after the demo bypass sets a fake user, causing the app to
+        // flicker between authenticated ↔ login screen in a loop.
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                if (isDemoRef.current) {
+                    // Demo mode active — ignore Supabase session changes
+                    return;
+                }
                 setUser(session?.user ?? null);
                 setLoading(false);
             }
@@ -51,6 +62,7 @@ export const AuthProvider = ({ children }) => {
 
             // DEMO BYPASS for client presentation
             if (email === 'demo@bornebit.com' && password === 'demo123') {
+                isDemoRef.current = true; // prevent onAuthStateChange from resetting user
                 setUser({
                     id: 'demo-user-123',
                     email: 'demo@bornebit.com',
@@ -97,9 +109,16 @@ export const AuthProvider = ({ children }) => {
     const handleSignOut = async () => {
         try {
             setError(null);
+            const wasDemo = isDemoRef.current;
+            isDemoRef.current = false;
             setIsDemo(false);
             setDemoStartTime(null);
-            await signOut();
+            if (wasDemo) {
+                // Demo user has no real Supabase session, just clear locally
+                setUser(null);
+            } else {
+                await signOut();
+            }
         } catch (err) {
             setError(err.message);
             throw err;
